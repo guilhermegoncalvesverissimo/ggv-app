@@ -1,26 +1,79 @@
 @import "tailwindcss";
 
+@theme {
+  /* Lavender base — matches the design reference */
+  --color-canvas: #c8bbf5;
+  --color-canvas-soft: #d6cdf7;
+  --color-canvas-deep: #a594f9;
+
+  --color-ink: #0e0e10;
+  --color-ink-soft: #2b2b30;
+  --color-muted: #6b7280;
+  --color-muted-soft: #9ca3af;
+
+  --color-accent: #7c5cf5;
+  --color-accent-soft: #ede9fe;
+  --color-success: #22c55e;
+  --color-warn: #f59e0b;
+  --color-danger: #ef4444;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+
+  --radius-card: 1.75rem;
+  --radius-pill: 9999px;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html,
+body {
+  height: 100%;
+  background: linear-gradient(180deg, #c8bbf5 0%, #b4a5f7 100%);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Disable native pull-to-refresh inside the installed PWA shell */
+@media (display-mode: standalone) {
+  html,
+  body {
+    overflow: hidden;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Scrollable area inside the shell */
+.app-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.app-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card primitive */
+.card {
+  background: #ffffff;
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 1px 2px rgba(15, 12, 41, 0.04),
+    0 12px 32px -16px rgba(15, 12, 41, 0.18);
+}
+
+/* Long-press feedback ring (used by Networking bubbles later) */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(124, 92, 245, 0.55); }
+  100% { box-shadow: 0 0 0 18px rgba(124, 92, 245, 0); }
+}
+.pulse-ring {
+  animation: pulseRing 0.9s ease-out forwards;
 }
