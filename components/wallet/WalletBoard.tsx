@@ -13,6 +13,7 @@ import {
 } from "@/lib/wallet/period";
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { PeriodChips } from "./PeriodChips";
+import { Sparkline } from "./Sparkline";
 import type { Transaction } from "@/lib/wallet/types";
 
 const TX_LIMIT = 20;
@@ -118,6 +119,9 @@ export function WalletBoard() {
           >
             {formatCents(stats.net, { signed: stats.net !== 0 })}
           </span>
+        </div>
+        <div className="mt-3 -mx-1">
+          <Sparkline transactions={filtered} positive={stats.net >= 0} />
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-canvas-soft/40 p-4">
