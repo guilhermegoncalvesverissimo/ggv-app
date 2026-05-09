@@ -4,44 +4,50 @@ import { useMemo, useState } from "react";
 import { Plus, TrendingDown, TrendingUp, Wallet, Trash2 } from "lucide-react";
 import { useTransactions } from "@/lib/wallet/useTransactions";
 import { categoryById } from "@/lib/wallet/categories";
+import { formatCents, formatDateRelative } from "@/lib/wallet/format";
 import {
-  formatCents,
-  formatDateRelative,
-  isInMonth,
-} from "@/lib/wallet/format";
+  type Period,
+  HERO_LABELS,
+  isInPeriod,
+  PERIOD_LABELS,
+} from "@/lib/wallet/period";
 import { AddTransactionSheet } from "./AddTransactionSheet";
+import { PeriodChips } from "./PeriodChips";
 import type { Transaction } from "@/lib/wallet/types";
 
-const TX_LIMIT = 12;
+const TX_LIMIT = 20;
 
 export function WalletBoard() {
   const { transactions, hydrated, addTransaction, removeTransaction } =
     useTransactions();
   const [addOpen, setAddOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<Period>("thisMonth");
 
-  const monthStats = useMemo(() => {
+  // Filter once for the active period — shared by stats + list.
+  const filtered = useMemo(() => {
     const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
+    return transactions.filter((t) => isInPeriod(t.date, period, now));
+  }, [transactions, period]);
+
+  const stats = useMemo(() => {
     let income = 0;
     let expense = 0;
-    for (const t of transactions) {
-      if (!isInMonth(t.date, y, m)) continue;
+    for (const t of filtered) {
       if (t.type === "income") income += t.amountCents;
       else expense += t.amountCents;
     }
     return { income, expense, net: income - expense };
-  }, [transactions]);
+  }, [filtered]);
 
   const ordered = useMemo(
     () =>
-      [...transactions].sort(
+      [...filtered].sort(
         (a, b) =>
           (b.date > a.date ? 1 : b.date < a.date ? -1 : 0) ||
           b.createdAt - a.createdAt
       ),
-    [transactions]
+    [filtered]
   );
 
   if (!hydrated) {
@@ -96,19 +102,21 @@ export function WalletBoard() {
 
   return (
     <>
+      <PeriodChips value={period} onChange={setPeriod} />
+
       {/* Hero: net balance */}
       <section className="card p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted">
           <Wallet className="h-4 w-4" />
-          Saldo deste mês
+          {HERO_LABELS[period]}
         </div>
         <div className="mt-2 flex items-baseline gap-2">
           <span
             className={`text-4xl font-semibold tracking-tight ${
-              monthStats.net < 0 ? "text-danger" : "text-ink"
+              stats.net < 0 ? "text-danger" : "text-ink"
             }`}
           >
-            {formatCents(monthStats.net, { signed: monthStats.net !== 0 })}
+            {formatCents(stats.net, { signed: stats.net !== 0 })}
           </span>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -117,7 +125,7 @@ export function WalletBoard() {
               <TrendingUp className="h-3.5 w-3.5" /> Entradas
             </div>
             <div className="mt-1 text-lg font-semibold tabular-nums">
-              {formatCents(monthStats.income)}
+              {formatCents(stats.income)}
             </div>
           </div>
           <div className="rounded-2xl bg-canvas-soft/40 p-4">
@@ -125,7 +133,7 @@ export function WalletBoard() {
               <TrendingDown className="h-3.5 w-3.5" /> Saídas
             </div>
             <div className="mt-1 text-lg font-semibold tabular-nums">
-              {formatCents(monthStats.expense)}
+              {formatCents(stats.expense)}
             </div>
           </div>
         </div>
@@ -134,29 +142,33 @@ export function WalletBoard() {
       {/* Transaction list */}
       <section className="card overflow-hidden">
         <div className="flex items-center justify-between px-5 pb-2 pt-5">
-          <h2 className="text-sm font-semibold tracking-tight">
-            Últimas transações
-          </h2>
+          <h2 className="text-sm font-semibold tracking-tight">Transações</h2>
           <span className="text-xs text-muted">
-            {transactions.length} no total
+            {filtered.length} · {PERIOD_LABELS[period]}
           </span>
         </div>
-        <ul>
-          {ordered.slice(0, TX_LIMIT).map((tx) => (
-            <TxRow
-              key={tx.id}
-              tx={tx}
-              isRemoving={removingId === tx.id}
-              onRequestRemove={() =>
-                setRemovingId((id) => (id === tx.id ? null : tx.id))
-              }
-              onConfirmRemove={() => {
-                removeTransaction(tx.id);
-                setRemovingId(null);
-              }}
-            />
-          ))}
-        </ul>
+        {ordered.length === 0 ? (
+          <p className="px-5 pb-5 pt-1 text-sm text-muted">
+            Sem transações neste período.
+          </p>
+        ) : (
+          <ul>
+            {ordered.slice(0, TX_LIMIT).map((tx) => (
+              <TxRow
+                key={tx.id}
+                tx={tx}
+                isRemoving={removingId === tx.id}
+                onRequestRemove={() =>
+                  setRemovingId((id) => (id === tx.id ? null : tx.id))
+                }
+                onConfirmRemove={() => {
+                  removeTransaction(tx.id);
+                  setRemovingId(null);
+                }}
+              />
+            ))}
+          </ul>
+        )}
       </section>
 
       {/* FAB */}
