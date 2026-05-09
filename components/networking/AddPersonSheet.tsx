@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sheet } from "./Sheet";
+import { Sheet } from "@/components/ui/Sheet";
 
 export function AddPersonSheet({
   open,

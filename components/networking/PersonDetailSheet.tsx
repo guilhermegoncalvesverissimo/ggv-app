@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Sheet } from "./Sheet";
+import { Sheet } from "@/components/ui/Sheet";
 import type { Person } from "@/lib/networking/types";
 import { colorFor, initialsOf } from "@/lib/networking/colors";
 import { encountersInLastDays } from "@/lib/networking/sizing";
