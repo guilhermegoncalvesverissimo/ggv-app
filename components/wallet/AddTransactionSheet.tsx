@@ -4,28 +4,34 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
 import { categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
-import type { TxType } from "@/lib/wallet/types";
+import type { Account, TxType } from "@/lib/wallet/types";
 
 export function AddTransactionSheet({
   open,
   onClose,
   onAdd,
+  accounts,
+  defaultAccountId,
 }: {
   open: boolean;
   onClose: () => void;
   onAdd: (tx: {
+    accountId: string;
     type: TxType;
     amountCents: number;
     category: string;
     note?: string;
     date: string;
   }) => void;
+  accounts: Account[];
+  defaultAccountId: string;
 }) {
   const [type, setType] = useState<TxType>("expense");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [date, setDate] = useState(todayIso());
+  const [accountId, setAccountId] = useState<string>(defaultAccountId);
   const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -35,10 +41,11 @@ export function AddTransactionSheet({
       setCategory(null);
       setNote("");
       setDate(todayIso());
+      setAccountId(defaultAccountId);
       const t = setTimeout(() => amountRef.current?.focus(), 250);
       return () => clearTimeout(t);
     }
-  }, [open]);
+  }, [open, defaultAccountId]);
 
   const visibleCategories = useMemo(() => categoriesFor(type), [type]);
 
@@ -50,11 +57,17 @@ export function AddTransactionSheet({
   }, [category, visibleCategories]);
 
   const cents = parseAmountToCents(amount);
-  const valid = Number.isFinite(cents) && cents > 0 && !!category && !!date;
+  const valid =
+    Number.isFinite(cents) &&
+    cents > 0 &&
+    !!category &&
+    !!date &&
+    !!accountId;
 
   const submit = () => {
     if (!valid || !category) return;
     onAdd({
+      accountId,
       type,
       amountCents: cents,
       category,
@@ -109,6 +122,36 @@ export function AddTransactionSheet({
             className="w-40 bg-transparent text-center text-5xl font-semibold tracking-tight tabular-nums text-ink outline-none placeholder:text-muted-soft/50"
           />
         </div>
+
+        {/* Account picker — only when there are multiple accounts */}
+        {accounts.length > 1 && (
+          <div className="-mx-5 overflow-x-auto px-5">
+            <div className="flex gap-2 pb-1">
+              {accounts.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => setAccountId(a.id)}
+                  className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                    accountId === a.id
+                      ? "bg-ink text-white"
+                      : "bg-canvas-soft/40 text-ink"
+                  }`}
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ background: a.color }}
+                    aria-hidden
+                  />
+                  <span>
+                    {a.emoji ? `${a.emoji} ` : ""}
+                    {a.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Categories */}
         <div className="-mx-5 overflow-x-auto px-5">

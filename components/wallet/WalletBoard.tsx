@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Plus, TrendingDown, TrendingUp, Wallet, Trash2 } from "lucide-react";
-import { useTransactions } from "@/lib/wallet/useTransactions";
+import { useWallet } from "@/lib/wallet/useWallet";
 import { categoryById } from "@/lib/wallet/categories";
 import { formatCents, formatDateRelative } from "@/lib/wallet/format";
 import {
@@ -14,22 +14,45 @@ import {
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { PeriodChips } from "./PeriodChips";
 import { Sparkline } from "./Sparkline";
-import type { Transaction } from "@/lib/wallet/types";
+import { AccountSheet } from "./AccountSheet";
+import { AccountPickerPill } from "./AccountPickerPill";
+import type { Account, Transaction } from "@/lib/wallet/types";
 
 const TX_LIMIT = 20;
 
+type AccountFilter = string | "all";
+
 export function WalletBoard() {
-  const { transactions, hydrated, addTransaction, removeTransaction } =
-    useTransactions();
-  const [addOpen, setAddOpen] = useState(false);
+  const {
+    accounts,
+    transactions,
+    hydrated,
+    addAccount,
+    addTransaction,
+    removeTransaction,
+  } = useWallet();
+  const [addTxOpen, setAddTxOpen] = useState(false);
+  const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("thisMonth");
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
 
-  // Filter once for the active period — shared by stats + list.
+  // Map for fast account lookup in rows.
+  const accountById = useMemo(() => {
+    const m = new Map<string, Account>();
+    for (const a of accounts) m.set(a.id, a);
+    return m;
+  }, [accounts]);
+
+  // Filter once for the active period + account — shared by stats + list.
   const filtered = useMemo(() => {
     const now = new Date();
-    return transactions.filter((t) => isInPeriod(t.date, period, now));
-  }, [transactions, period]);
+    return transactions.filter((t) => {
+      if (!isInPeriod(t.date, period, now)) return false;
+      if (accountFilter !== "all" && t.accountId !== accountFilter) return false;
+      return true;
+    });
+  }, [transactions, period, accountFilter]);
 
   const stats = useMemo(() => {
     let income = 0;
@@ -51,6 +74,12 @@ export function WalletBoard() {
     [filtered]
   );
 
+  // Default account for the add-tx sheet: respect filter when set, else first.
+  const defaultAccountId =
+    accountFilter !== "all" ? accountFilter : accounts[0]?.id ?? "";
+
+  const showAccountBadges = accounts.length > 1;
+
   if (!hydrated) {
     return (
       <div className="card flex items-center justify-center p-10 text-sm text-muted">
@@ -62,6 +91,15 @@ export function WalletBoard() {
   if (transactions.length === 0) {
     return (
       <>
+        {/* Header row even on empty state — lets you create accounts */}
+        <div className="flex items-center justify-end">
+          <AccountPickerPill
+            accounts={accounts}
+            selected={accountFilter}
+            onOpen={() => setAccountSheetOpen(true)}
+          />
+        </div>
+
         <section className="card p-6">
           <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-muted">
             <Wallet className="h-4 w-4" />
@@ -85,7 +123,7 @@ export function WalletBoard() {
           </p>
           <button
             type="button"
-            onClick={() => setAddOpen(true)}
+            onClick={() => setAddTxOpen(true)}
             className="mt-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-white transition active:scale-95"
           >
             Adicionar transação
@@ -93,9 +131,19 @@ export function WalletBoard() {
         </div>
 
         <AddTransactionSheet
-          open={addOpen}
-          onClose={() => setAddOpen(false)}
+          open={addTxOpen}
+          onClose={() => setAddTxOpen(false)}
           onAdd={addTransaction}
+          accounts={accounts}
+          defaultAccountId={defaultAccountId}
+        />
+        <AccountSheet
+          open={accountSheetOpen}
+          onClose={() => setAccountSheetOpen(false)}
+          accounts={accounts}
+          selected={accountFilter}
+          onSelect={setAccountFilter}
+          onAdd={addAccount}
         />
       </>
     );
@@ -103,7 +151,14 @@ export function WalletBoard() {
 
   return (
     <>
-      <PeriodChips value={period} onChange={setPeriod} />
+      <div className="flex items-center justify-between gap-2">
+        <PeriodChips value={period} onChange={setPeriod} />
+        <AccountPickerPill
+          accounts={accounts}
+          selected={accountFilter}
+          onOpen={() => setAccountSheetOpen(true)}
+        />
+      </div>
 
       {/* Hero: net balance */}
       <section className="card p-6">
@@ -161,6 +216,8 @@ export function WalletBoard() {
               <TxRow
                 key={tx.id}
                 tx={tx}
+                account={accountById.get(tx.accountId)}
+                showAccountBadge={showAccountBadges}
                 isRemoving={removingId === tx.id}
                 onRequestRemove={() =>
                   setRemovingId((id) => (id === tx.id ? null : tx.id))
@@ -179,16 +236,26 @@ export function WalletBoard() {
       <button
         type="button"
         aria-label="Adicionar transação"
-        onClick={() => setAddOpen(true)}
+        onClick={() => setAddTxOpen(true)}
         className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-white shadow-[0_18px_40px_-12px_rgba(15,12,41,0.55)] transition active:scale-95"
       >
         <Plus className="h-6 w-6" strokeWidth={2.5} />
       </button>
 
       <AddTransactionSheet
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
+        open={addTxOpen}
+        onClose={() => setAddTxOpen(false)}
         onAdd={addTransaction}
+        accounts={accounts}
+        defaultAccountId={defaultAccountId}
+      />
+      <AccountSheet
+        open={accountSheetOpen}
+        onClose={() => setAccountSheetOpen(false)}
+        accounts={accounts}
+        selected={accountFilter}
+        onSelect={setAccountFilter}
+        onAdd={addAccount}
       />
     </>
   );
@@ -196,11 +263,15 @@ export function WalletBoard() {
 
 function TxRow({
   tx,
+  account,
+  showAccountBadge,
   isRemoving,
   onRequestRemove,
   onConfirmRemove,
 }: {
   tx: Transaction;
+  account: Account | undefined;
+  showAccountBadge: boolean;
   isRemoving: boolean;
   onRequestRemove: () => void;
   onConfirmRemove: () => void;
@@ -210,8 +281,17 @@ function TxRow({
 
   return (
     <li className="flex items-center gap-3 border-t border-canvas-soft/40 px-5 py-3 first:border-t-0">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-canvas-soft/50 text-lg">
-        {cat?.emoji ?? "❓"}
+      <div className="relative h-10 w-10 shrink-0">
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-canvas-soft/50 text-lg">
+          {cat?.emoji ?? "❓"}
+        </div>
+        {showAccountBadge && account && (
+          <span
+            className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white"
+            style={{ background: account.color }}
+            aria-label={`Conta: ${account.name}`}
+          />
+        )}
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-ink">
