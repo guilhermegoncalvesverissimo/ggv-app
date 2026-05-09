@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Sheet } from "@/components/ui/Sheet";
+import { AvatarPicker } from "./AvatarPicker";
 
 export function AddPersonSheet({
   open,
@@ -10,16 +11,18 @@ export function AddPersonSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (name: string, badge?: string) => void;
+  onAdd: (input: { name: string; badge?: string; avatar?: string }) => void;
 }) {
   const [name, setName] = useState("");
   const [badge, setBadge] = useState("");
+  const [avatar, setAvatar] = useState<string | undefined>();
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setName("");
       setBadge("");
+      setAvatar(undefined);
       // small delay so the sheet animates in before the keyboard pops on iOS
       const t = setTimeout(() => inputRef.current?.focus(), 250);
       return () => clearTimeout(t);
@@ -28,7 +31,7 @@ export function AddPersonSheet({
 
   const submit = () => {
     if (!name.trim()) return;
-    onAdd(name, badge);
+    onAdd({ name, badge, avatar });
     onClose();
   };
 
@@ -49,6 +52,16 @@ export function AddPersonSheet({
           submit();
         }}
       >
+        <div className="flex justify-center pb-1">
+          <AvatarPicker
+            name={name}
+            badge={badge}
+            value={avatar}
+            onChange={setAvatar}
+            size={88}
+          />
+        </div>
+
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-muted">
             Nome

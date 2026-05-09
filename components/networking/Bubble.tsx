@@ -20,6 +20,7 @@ export function Bubble({
   const size = bubbleSize(person.encounters.length);
   const color = colorFor(person.id + person.name);
   const initials = initialsOf(person.name);
+  const hasAvatar = !!person.avatar;
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPos = useRef<{ x: number; y: number } | null>(null);
@@ -42,7 +43,6 @@ export function Bubble({
       longPressFired.current = true;
       setPressing(false);
       setPulseKey((k) => k + 1);
-      // Light haptic where supported.
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate?.(12);
       }
@@ -76,7 +76,6 @@ export function Bubble({
         person.encounters.length === 1 ? "" : "s"
       }`}
       onPointerDown={(e) => {
-        // Only main button / touch.
         if (e.button !== 0 && e.pointerType === "mouse") return;
         e.currentTarget.setPointerCapture(e.pointerId);
         startPress(e.clientX, e.clientY);
@@ -91,17 +90,28 @@ export function Bubble({
       style={{
         width: size,
         height: size,
-        background: `linear-gradient(160deg, ${color}, ${color}cc)`,
+        background: hasAvatar
+          ? "transparent"
+          : `linear-gradient(160deg, ${color}, ${color}cc)`,
         WebkitTouchCallout: "none",
         WebkitUserSelect: "none",
         userSelect: "none",
         touchAction: "manipulation",
       }}
-      className={`relative flex shrink-0 select-none items-center justify-center rounded-full text-white shadow-[0_8px_24px_-8px_rgba(15,12,41,0.35)] transition-transform duration-150 ${
+      className={`relative flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full text-white shadow-[0_8px_24px_-8px_rgba(15,12,41,0.35)] transition-transform duration-150 ${
         pressing ? "scale-95" : "scale-100"
       }`}
     >
-      {/* Long-press feedback ring */}
+      {hasAvatar && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={person.avatar}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          draggable={false}
+        />
+      )}
+
       {pulseKey > 0 && (
         <span
           key={pulseKey}
@@ -110,30 +120,42 @@ export function Bubble({
         />
       )}
 
-      <div className="flex flex-col items-center justify-center leading-none">
-        <span
-          className="font-semibold tracking-tight"
-          style={{ fontSize: Math.round(size * 0.32) }}
-        >
-          {person.badge || initials}
-        </span>
-        {person.encounters.length > 0 && (
+      {!hasAvatar && (
+        <div className="relative z-10 flex flex-col items-center justify-center leading-none">
           <span
-            className="mt-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
-            style={{ fontSize: Math.max(9, Math.round(size * 0.1)) }}
+            className="font-semibold tracking-tight"
+            style={{ fontSize: Math.round(size * 0.32) }}
           >
-            ×{person.encounters.length}
+            {person.badge || initials}
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Press progress arc — visual cue that something is happening */}
+      {/* Encounter count — bottom right badge when there's an avatar to keep
+          the photo visible; centered chip otherwise. */}
+      {person.encounters.length > 0 && (
+        <span
+          className={
+            hasAvatar
+              ? "absolute bottom-1 right-1 z-10 rounded-full bg-ink/85 px-1.5 py-0.5 text-[10px] font-semibold text-white ring-2 ring-white/80"
+              : "relative z-10 mt-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
+          }
+          style={
+            hasAvatar
+              ? undefined
+              : { fontSize: Math.max(9, Math.round(size * 0.1)) }
+          }
+        >
+          ×{person.encounters.length}
+        </span>
+      )}
+
       {pressing && (
         <span
           aria-hidden
-          className="absolute inset-0 rounded-full"
+          className="absolute inset-0 z-20 rounded-full"
           style={{
-            boxShadow: "0 0 0 3px rgba(255,255,255,0.55) inset",
+            boxShadow: "0 0 0 3px rgba(255,255,255,0.7) inset",
           }}
         />
       )}

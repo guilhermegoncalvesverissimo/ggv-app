@@ -15,8 +15,9 @@ export function NetworkingBoard() {
     addPerson,
     removePerson,
     renamePerson,
+    setAvatar,
     logEncounter,
-    undoLastEncounter,
+    removeEncounter,
   } = usePeople();
 
   const [addOpen, setAddOpen] = useState(false);
@@ -126,8 +127,9 @@ export function NetworkingBoard() {
         person={open}
         onClose={() => setOpenId(null)}
         onLogEncounter={logEncounter}
-        onUndoLast={undoLastEncounter}
+        onRemoveEncounter={removeEncounter}
         onRename={renamePerson}
+        onSetAvatar={setAvatar}
         onRemove={removePerson}
       />
     </>
