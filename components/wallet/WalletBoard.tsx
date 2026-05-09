@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, TrendingDown, TrendingUp, Wallet, Trash2 } from "lucide-react";
+import { Plus, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import { useWallet } from "@/lib/wallet/useWallet";
-import { categoryById } from "@/lib/wallet/categories";
-import { formatCents, formatDateRelative } from "@/lib/wallet/format";
+import { formatCents } from "@/lib/wallet/format";
 import {
   type Period,
   HERO_LABELS,
@@ -16,7 +15,8 @@ import { PeriodChips } from "./PeriodChips";
 import { Sparkline } from "./Sparkline";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
-import type { Account, Transaction } from "@/lib/wallet/types";
+import { SwipeableTxRow } from "./SwipeableTxRow";
+import type { Account } from "@/lib/wallet/types";
 
 const TX_LIMIT = 20;
 
@@ -33,7 +33,7 @@ export function WalletBoard() {
   } = useWallet();
   const [addTxOpen, setAddTxOpen] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
-  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("thisMonth");
   const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
 
@@ -213,18 +213,19 @@ export function WalletBoard() {
         ) : (
           <ul>
             {ordered.slice(0, TX_LIMIT).map((tx) => (
-              <TxRow
+              <SwipeableTxRow
                 key={tx.id}
                 tx={tx}
                 account={accountById.get(tx.accountId)}
                 showAccountBadge={showAccountBadges}
-                isRemoving={removingId === tx.id}
-                onRequestRemove={() =>
-                  setRemovingId((id) => (id === tx.id ? null : tx.id))
+                isOpen={openSwipeId === tx.id}
+                onRequestOpen={() => setOpenSwipeId(tx.id)}
+                onClose={() =>
+                  setOpenSwipeId((id) => (id === tx.id ? null : id))
                 }
-                onConfirmRemove={() => {
+                onDelete={() => {
                   removeTransaction(tx.id);
-                  setRemovingId(null);
+                  if (openSwipeId === tx.id) setOpenSwipeId(null);
                 }}
               />
             ))}
@@ -261,83 +262,3 @@ export function WalletBoard() {
   );
 }
 
-function TxRow({
-  tx,
-  account,
-  showAccountBadge,
-  isRemoving,
-  onRequestRemove,
-  onConfirmRemove,
-}: {
-  tx: Transaction;
-  account: Account | undefined;
-  showAccountBadge: boolean;
-  isRemoving: boolean;
-  onRequestRemove: () => void;
-  onConfirmRemove: () => void;
-}) {
-  const cat = categoryById(tx.category);
-  const signed = tx.type === "income" ? tx.amountCents : -tx.amountCents;
-
-  return (
-    <li className="flex items-center gap-3 border-t border-canvas-soft/40 px-5 py-3 first:border-t-0">
-      <div className="relative h-10 w-10 shrink-0">
-        <div className="flex h-full w-full items-center justify-center rounded-full bg-canvas-soft/50 text-lg">
-          {cat?.emoji ?? "❓"}
-        </div>
-        {showAccountBadge && account && (
-          <span
-            className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white"
-            style={{ background: account.color }}
-            aria-label={`Conta: ${account.name}`}
-          />
-        )}
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="truncate text-sm font-medium text-ink">
-          {cat?.label ?? "Outras"}
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted">
-          <span>{formatDateRelative(tx.date)}</span>
-          {tx.note && <span className="truncate">· {tx.note}</span>}
-        </div>
-      </div>
-      {isRemoving ? (
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onRequestRemove}
-            className="rounded-full px-3 py-1.5 text-xs text-muted"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={onConfirmRemove}
-            className="rounded-full bg-danger px-3 py-1.5 text-xs font-medium text-white"
-          >
-            Apagar
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-2">
-          <span
-            className={`text-sm font-semibold tabular-nums ${
-              signed >= 0 ? "text-success" : "text-ink"
-            }`}
-          >
-            {formatCents(signed, { signed: true })}
-          </span>
-          <button
-            type="button"
-            onClick={onRequestRemove}
-            aria-label="Remover transação"
-            className="flex h-7 w-7 items-center justify-center rounded-full text-muted-soft transition active:scale-90"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
-    </li>
-  );
-}
