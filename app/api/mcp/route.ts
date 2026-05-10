@@ -8,6 +8,26 @@ export const dynamic = "force-dynamic";
 
 const PROTOCOL_VERSION = "2025-06-18";
 
+/** Methods that don't mutate state — safe to expose without auth so the
+ *  claude.ai connector dialog can probe the server during onboarding. */
+const PUBLIC_METHODS = new Set([
+  "initialize",
+  "notifications/initialized",
+  "tools/list",
+  "ping",
+]);
+
+/** CORS headers added to every response. The connector dialog runs in a
+ *  browser context and needs these for the preflight + actual requests. */
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "Content-Type, Authorization, Accept, Mcp-Session-Id, Mcp-Protocol-Version",
+  "Access-Control-Expose-Headers": "Mcp-Session-Id, WWW-Authenticate",
+  "Access-Control-Max-Age": "86400",
+};
+
 const TOOLS = [
   {
     name: "save_news_post",
@@ -52,8 +72,15 @@ type RpcRequest = {
   params?: Record<string, unknown>;
 };
 
+function withCors(res: NextResponse): NextResponse {
+  for (const [k, v] of Object.entries(CORS_HEADERS)) res.headers.set(k, v);
+  return res;
+}
+
 function rpcResult(id: RpcRequest["id"], result: unknown) {
-  return NextResponse.json({ jsonrpc: "2.0", id: id ?? null, result });
+  return withCors(
+    NextResponse.json({ jsonrpc: "2.0", id: id ?? null, result })
+  );
 }
 
 function rpcError(
@@ -62,10 +89,28 @@ function rpcError(
   message: string,
   status = 200
 ) {
-  return NextResponse.json(
-    { jsonrpc: "2.0", id: id ?? null, error: { code, message } },
-    { status }
+  return withCors(
+    NextResponse.json(
+      { jsonrpc: "2.0", id: id ?? null, error: { code, message } },
+      { status }
+    )
   );
+}
+
+function unauthorized(id: RpcRequest["id"]) {
+  const res = NextResponse.json(
+    {
+      jsonrpc: "2.0",
+      id: id ?? null,
+      error: { code: -32001, message: "Unauthorized" },
+    },
+    { status: 401 }
+  );
+  res.headers.set(
+    "WWW-Authenticate",
+    `Bearer realm="ggv-news", resource_metadata="https://ggv-app.vercel.app/.well-known/oauth-protected-resource"`
+  );
+  return withCors(res);
 }
 
 /**
@@ -73,13 +118,11 @@ function rpcError(
  * claude.ai's custom connector calls during a session: `initialize`,
  * `tools/list`, `tools/call`, plus the `notifications/initialized` ack.
  *
- * Auth: every request must carry `Authorization: Bearer <MCP_BEARER_TOKEN>`.
+ * Auth: read-only methods (initialize, tools/list, ping) are public so the
+ * connector dialog can probe the server. Anything that mutates state
+ * (`tools/call`) requires `Authorization: Bearer <MCP_BEARER_TOKEN>`.
  */
 export async function POST(req: Request) {
-  if (!checkBearer(req)) {
-    return rpcError(null, -32001, "Unauthorized", 401);
-  }
-
   let body: RpcRequest;
   try {
     body = (await req.json()) as RpcRequest;
@@ -88,6 +131,10 @@ export async function POST(req: Request) {
   }
 
   const { method, id, params } = body;
+
+  if (!PUBLIC_METHODS.has(method) && !checkBearer(req)) {
+    return unauthorized(id);
+  }
 
   switch (method) {
     case "initialize":
@@ -99,7 +146,7 @@ export async function POST(req: Request) {
 
     case "notifications/initialized":
       // Notifications don't expect a response.
-      return new NextResponse(null, { status: 204 });
+      return withCors(new NextResponse(null, { status: 204 }));
 
     case "tools/list":
       return rpcResult(id, { tools: TOOLS });
@@ -183,13 +230,23 @@ async function handleToolCall(
  *  flavour of Streamable HTTP). Return a small JSON description so a curl
  *  works as a sanity check. */
 export async function GET() {
-  return NextResponse.json({
-    name: "ggv-news",
-    version: "1.0.0",
-    protocolVersion: PROTOCOL_VERSION,
-    transport: "streamable-http (request/response)",
-    tools: TOOLS.map((t) => t.name),
-    note:
-      "POST JSON-RPC 2.0 with Authorization: Bearer <token>. Methods: initialize, tools/list, tools/call.",
-  });
+  return withCors(
+    NextResponse.json({
+      name: "ggv-news",
+      version: "1.0.0",
+      protocolVersion: PROTOCOL_VERSION,
+      transport: "streamable-http (request/response)",
+      tools: TOOLS.map((t) => t.name),
+      authentication: {
+        publicMethods: Array.from(PUBLIC_METHODS),
+        protectedMethods: ["tools/call"],
+        scheme: "Bearer",
+      },
+    })
+  );
+}
+
+/** Explicit OPTIONS handler for CORS preflight. */
+export async function OPTIONS() {
+  return withCors(new NextResponse(null, { status: 204 }));
 }
