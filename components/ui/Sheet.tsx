@@ -33,7 +33,7 @@ export function Sheet({
     >
       <div
         onClick={onClose}
-        className={`absolute inset-0 bg-ink/40 transition-opacity ${
+        className={`absolute inset-0 bg-elevated/40 transition-opacity ${
           open ? "opacity-100" : "opacity-0"
         }`}
       />

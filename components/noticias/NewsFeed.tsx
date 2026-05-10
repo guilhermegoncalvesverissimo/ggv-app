@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, Sparkles } from "lucide-react";
 import type { NewsPost } from "@/lib/news/types";
+import { PullToRefresh } from "@/components/ui/PullToRefresh";
 
 const dayMonthFmt = new Intl.DateTimeFormat("pt-PT", {
   day: "numeric",
@@ -29,24 +30,45 @@ const isMobile = () =>
   typeof navigator !== "undefined" &&
   /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+type FetchResult = { posts: NewsPost[]; storageMissing: boolean };
+
+async function fetchPosts(): Promise<FetchResult> {
+  const r = await fetch("/api/news?limit=50", { cache: "no-store" });
+  const json = (await r.json()) as {
+    posts?: NewsPost[];
+    note?: string;
+    error?: string;
+  };
+  if (!r.ok) throw new Error(json.error ?? `HTTP ${r.status}`);
+  return {
+    posts: json.posts ?? [],
+    storageMissing: json.note === "storage_not_configured",
+  };
+}
+
 export function NewsFeed() {
   const [posts, setPosts] = useState<NewsPost[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [storageMissing, setStorageMissing] = useState(false);
 
+  const load = useCallback(async () => {
+    try {
+      const result = await fetchPosts();
+      setStorageMissing(result.storageMissing);
+      setPosts(result.posts);
+      setError(null);
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/news?limit=50", { cache: "no-store" })
-      .then(async (r) => {
-        const json = (await r.json()) as {
-          posts?: NewsPost[];
-          note?: string;
-          error?: string;
-        };
+    fetchPosts()
+      .then((result) => {
         if (cancelled) return;
-        if (!r.ok) throw new Error(json.error ?? `HTTP ${r.status}`);
-        setStorageMissing(json.note === "storage_not_configured");
-        setPosts(json.posts ?? []);
+        setStorageMissing(result.storageMissing);
+        setPosts(result.posts);
       })
       .catch((e: unknown) => {
         if (!cancelled) setError((e as Error).message);
@@ -56,24 +78,26 @@ export function NewsFeed() {
     };
   }, []);
 
+  // Refresh used by pull-to-refresh.
+  const onRefresh = useCallback(async () => {
+    await load();
+  }, [load]);
+
+  let body: React.ReactNode;
   if (error) {
-    return (
+    body = (
       <div className="card p-5 text-sm text-danger">
         Erro ao carregar: {error}
       </div>
     );
-  }
-
-  if (posts === null) {
-    return (
+  } else if (posts === null) {
+    body = (
       <div className="card flex items-center justify-center p-10 text-sm text-muted">
         A carregar…
       </div>
     );
-  }
-
-  if (storageMissing) {
-    return (
+  } else if (storageMissing) {
+    body = (
       <div className="card flex flex-col items-center gap-3 p-8 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
           <Sparkles className="h-6 w-6 text-accent" strokeWidth={2.25} />
@@ -87,10 +111,8 @@ export function NewsFeed() {
         </p>
       </div>
     );
-  }
-
-  if (posts.length === 0) {
-    return (
+  } else if (posts.length === 0) {
+    body = (
       <div className="card flex flex-col items-center gap-3 p-8 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
           <Sparkles className="h-6 w-6 text-accent" strokeWidth={2.25} />
@@ -98,19 +120,21 @@ export function NewsFeed() {
         <h2 className="text-lg font-semibold tracking-tight">Sem posts ainda</h2>
         <p className="max-w-xs text-sm text-muted">
           Assim que a routine correr e empurrar os tweets traduzidos, aparecem
-          aqui — primeiro os mais recentes.
+          aqui — primeiro os mais recentes. Puxa para baixo para atualizar.
         </p>
+      </div>
+    );
+  } else {
+    body = (
+      <div className="space-y-3">
+        {posts.map((p) => (
+          <NewsCard key={p.id} post={p} />
+        ))}
       </div>
     );
   }
 
-  return (
-    <div className="space-y-3">
-      {posts.map((p) => (
-        <NewsCard key={p.id} post={p} />
-      ))}
-    </div>
-  );
+  return <PullToRefresh onRefresh={onRefresh}>{body}</PullToRefresh>;
 }
 
 function NewsCard({ post }: { post: NewsPost }) {
@@ -127,9 +151,6 @@ function NewsCard({ post }: { post: NewsPost }) {
     e.preventDefault();
     const before = Date.now();
     const fallback = () => {
-      // If the X app handled the deep link, the page would have lost focus —
-      // and most browsers pause setTimeouts in backgrounded tabs, so we only
-      // hit this if we're still here (≈no app installed / link rejected).
       if (document.visibilityState === "visible" && Date.now() - before < 2500) {
         window.location.href = post.source;
       }

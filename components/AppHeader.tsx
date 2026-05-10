@@ -1,6 +1,7 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export function AppHeader() {
   return (
@@ -20,12 +21,7 @@ export function AppHeader() {
           </div>
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-canvas" />
         </div>
-        <button
-          aria-label="Notificações"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas-soft transition active:scale-95"
-        >
-          <Bell className="h-5 w-5 text-ink" strokeWidth={2.25} />
-        </button>
+        <ThemeToggle />
       </div>
     </header>
   );

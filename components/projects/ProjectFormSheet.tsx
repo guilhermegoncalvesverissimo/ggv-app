@@ -179,7 +179,7 @@ export function ProjectFormSheet({
                 onClick={() => setStatus(s)}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition active:scale-[0.98] ${
                   status === s
-                    ? "bg-ink text-white"
+                    ? "bg-elevated text-white"
                     : "bg-canvas-soft/40 text-ink"
                 }`}
               >
@@ -228,7 +228,7 @@ export function ProjectFormSheet({
           <button
             type="submit"
             disabled={!name.trim()}
-            className="flex-1 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
+            className="flex-1 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
           >
             {isEdit ? "Guardar" : "Criar projeto"}
           </button>

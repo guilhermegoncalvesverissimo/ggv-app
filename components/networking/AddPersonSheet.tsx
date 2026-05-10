@@ -103,7 +103,7 @@ export function AddPersonSheet({
           <button
             type="submit"
             disabled={!name.trim()}
-            className="flex-1 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
+            className="flex-1 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
           >
             Adicionar
           </button>

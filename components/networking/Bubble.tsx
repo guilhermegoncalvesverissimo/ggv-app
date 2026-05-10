@@ -137,7 +137,7 @@ export function Bubble({
         <span
           className={
             hasAvatar
-              ? "absolute bottom-1 right-1 z-10 rounded-full bg-ink/85 px-1.5 py-0.5 text-[10px] font-semibold text-white ring-2 ring-white/80"
+              ? "absolute bottom-1 right-1 z-10 rounded-full bg-elevated/85 px-1.5 py-0.5 text-[10px] font-semibold text-white ring-2 ring-white/80"
               : "relative z-10 mt-1 rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-medium tabular-nums"
           }
           style={

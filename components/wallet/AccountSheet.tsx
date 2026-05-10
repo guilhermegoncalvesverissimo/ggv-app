@@ -135,7 +135,7 @@ export function AccountSheet({
               <button
                 type="submit"
                 disabled={!name.trim()}
-                className="flex-1 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
+                className="flex-1 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
               >
                 Criar conta
               </button>
@@ -179,7 +179,7 @@ export function AccountSheet({
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98]"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" /> Nova conta
           </button>

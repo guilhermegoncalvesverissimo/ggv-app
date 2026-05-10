@@ -33,7 +33,7 @@ export function StatusChips({
               onClick={() => onChange(s)}
               className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] ${
                 value === s
-                  ? "bg-ink text-white"
+                  ? "bg-elevated text-white"
                   : "bg-canvas-soft text-ink"
               }`}
             >

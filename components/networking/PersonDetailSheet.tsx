@@ -77,7 +77,7 @@ export function PersonDetailSheet({
       <button
         type="button"
         onClick={() => onLogEncounter(person.id)}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98]"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98]"
       >
         <Plus className="h-4 w-4" /> Registar encontro
       </button>

@@ -1,17 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  /* Page canvas — white. `canvas-soft` is a near-neutral light grey used for
-   * sub-surfaces (chip backgrounds, dividers, stat boxes inside cards) so
-   * they stay distinguishable from the white page + white card. */
-  --color-canvas: #ffffff;
-  --color-canvas-soft: #f3f3f6;
-  --color-canvas-deep: #a594f9;
+  /* Page surfaces */
+  --color-canvas: #ffffff;        /* page background */
+  --color-canvas-soft: #f3f3f6;   /* chips, dividers, stat boxes */
+  --color-canvas-deep: #a594f9;   /* lavender accent for avatar gradients */
 
+  /* Card surface — separate from canvas so it can shift independently
+   * in dark mode (cards stay slightly raised above the page). */
+  --color-card-bg: #ffffff;
+  --color-card-border: rgba(15, 12, 41, 0.06);
+  --color-card-shadow: rgba(15, 12, 41, 0.10);
+
+  /* Text */
   --color-ink: #0e0e10;
   --color-ink-soft: #2b2b30;
   --color-muted: #6b7280;
   --color-muted-soft: #9ca3af;
+
+  /* "Elevated" dark surfaces (navbar, FAB, primary buttons, active chips).
+   * Distinct from `ink` (text) so they can take independent dark-mode values. */
+  --color-elevated: #0e0e10;
+  --color-on-elevated: #ffffff;
 
   --color-accent: #7c5cf5;
   --color-accent-soft: #ede9fe;
@@ -28,19 +38,48 @@
   --radius-pill: 9999px;
 }
 
+/* Dark mode — applied when `<html>` has the `dark` class. Light mode is the
+ * default (no class needed). The pre-paint script in layout.tsx sets the
+ * class synchronously to avoid a flash. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-canvas: #0e0e10;
+  --color-canvas-soft: #1f1f25;
+  --color-canvas-deep: #8b75f0;
+
+  --color-card-bg: #18181d;
+  --color-card-border: rgba(255, 255, 255, 0.06);
+  --color-card-shadow: rgba(0, 0, 0, 0.55);
+
+  --color-ink: #f5f5f7;
+  --color-ink-soft: #d4d4d8;
+  --color-muted: #9ca3af;
+  --color-muted-soft: #6b7280;
+
+  --color-elevated: #2a2a32;
+  --color-on-elevated: #f5f5f7;
+
+  --color-accent-soft: rgba(124, 92, 245, 0.18);
+}
+
 :root {
   color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
 }
 
 html,
 body {
   height: 100%;
-  background: #ffffff;
+  background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: contain;
+  transition: background-color 200ms ease;
 }
 
 /* Disable native pull-to-refresh inside the installed PWA shell */
@@ -51,25 +90,28 @@ body {
   }
 }
 
-/* Scrollable area inside the shell */
+/* Scrollable area inside the shell. `overscroll-behavior-y: none` keeps the
+ * iOS rubber-band from competing with our custom PullToRefresh component. */
 .app-scroll {
   height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  overscroll-behavior-y: none;
 }
 .app-scroll::-webkit-scrollbar {
   display: none;
 }
 
-/* Card primitive — white-on-white needs a hairline + soft shadow to read. */
+/* Card primitive — uses the card tokens so it shifts cleanly between
+ * light and dark. */
 .card {
-  background: #ffffff;
+  background: var(--color-card-bg);
   border-radius: var(--radius-card);
-  border: 1px solid rgba(15, 12, 41, 0.06);
+  border: 1px solid var(--color-card-border);
   box-shadow:
-    0 1px 2px rgba(15, 12, 41, 0.03),
-    0 8px 24px -12px rgba(15, 12, 41, 0.10);
+    0 1px 2px var(--color-card-shadow),
+    0 8px 24px -12px var(--color-card-shadow);
 }
 
 /* Long-press feedback ring (used by Networking bubbles) */

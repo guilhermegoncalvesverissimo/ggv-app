@@ -134,7 +134,7 @@ export function AddTransactionSheet({
                   onClick={() => setAccountId(a.id)}
                   className={`flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition ${
                     accountId === a.id
-                      ? "bg-ink text-white"
+                      ? "bg-elevated text-white"
                       : "bg-canvas-soft/40 text-ink"
                   }`}
                 >
@@ -163,7 +163,7 @@ export function AddTransactionSheet({
                 onClick={() => setCategory(c.id)}
                 className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium transition ${
                   category === c.id
-                    ? "bg-ink text-white"
+                    ? "bg-elevated text-white"
                     : "bg-canvas-soft/40 text-ink"
                 }`}
               >
@@ -212,7 +212,7 @@ export function AddTransactionSheet({
           <button
             type="submit"
             disabled={!valid}
-            className="flex-1 rounded-full bg-ink px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
+            className="flex-1 rounded-full bg-elevated px-4 py-3 text-sm font-medium text-white transition active:scale-[0.98] disabled:opacity-40"
           >
             Guardar
           </button>
