@@ -8,12 +8,19 @@ export const dynamic = "force-dynamic";
 
 const PROTOCOL_VERSION = "2025-06-18";
 
-/** Methods that don't mutate state — safe to expose without auth so the
- *  claude.ai connector dialog can probe the server during onboarding. */
+/** Methods that bypass the bearer check.
+ *
+ *  `tools/call` is public for now because claude.ai's custom-connector dialog
+ *  doesn't expose a way to configure static bearer tokens — only OAuth 2.1.
+ *  The trade-off is acceptable for a personal, single-user app with a
+ *  non-public URL and non-sensitive data (publicly-posted tweets translated
+ *  for the owner's own feed). Tighten by implementing OAuth 2.1 if/when the
+ *  app goes multi-user, and remove `tools/call` from this set. */
 const PUBLIC_METHODS = new Set([
   "initialize",
   "notifications/initialized",
   "tools/list",
+  "tools/call",
   "ping",
 ]);
 
