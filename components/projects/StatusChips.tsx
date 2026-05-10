@@ -34,14 +34,14 @@ export function StatusChips({
               className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] ${
                 value === s
                   ? "bg-ink text-white"
-                  : "bg-white/55 text-ink backdrop-blur-sm"
+                  : "bg-canvas-soft text-ink"
               }`}
             >
               <span>{LABELS[s]}</span>
               {c > 0 && (
                 <span
                   className={`rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
-                    value === s ? "bg-white/20" : "bg-canvas-soft/50 text-muted"
+                    value === s ? "bg-white/20" : "bg-white text-muted"
                   }`}
                 >
                   {c}

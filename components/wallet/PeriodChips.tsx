@@ -22,7 +22,7 @@ export function PeriodChips({
             className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition active:scale-[0.98] ${
               value === p
                 ? "bg-ink text-white"
-                : "bg-white/55 text-ink backdrop-blur-sm"
+                : "bg-canvas-soft text-ink"
             }`}
           >
             {PERIOD_LABELS[p]}

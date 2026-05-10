@@ -4,8 +4,8 @@
   "description": "App pessoal de notícias, networking, wallet e projetos.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#c8bbf5",
-  "theme_color": "#c8bbf5",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "lang": "pt-PT",
   "icons": [

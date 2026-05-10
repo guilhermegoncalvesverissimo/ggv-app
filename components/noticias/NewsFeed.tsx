@@ -19,6 +19,16 @@ function shortHost(url: string): string {
   }
 }
 
+/** Pull a tweet ID out of an x.com / twitter.com status URL, if any. */
+function tweetIdFromUrl(url: string): string | null {
+  const m = url.match(/(?:x\.com|twitter\.com)\/[^/]+\/status\/(\d+)/i);
+  return m ? m[1] : null;
+}
+
+const isMobile = () =>
+  typeof navigator !== "undefined" &&
+  /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
 export function NewsFeed() {
   const [posts, setPosts] = useState<NewsPost[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +114,30 @@ export function NewsFeed() {
 }
 
 function NewsCard({ post }: { post: NewsPost }) {
+  /**
+   * On mobile, try to open the X/Twitter app via its `twitter://` URL scheme.
+   * If the app isn't installed (or the deep link is silently ignored), fall
+   * back to the regular https URL after a short delay. On desktop, just use
+   * the default new-tab behaviour.
+   */
+  const onSourceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const tweetId = tweetIdFromUrl(post.source);
+    if (!tweetId || !isMobile()) return;
+
+    e.preventDefault();
+    const before = Date.now();
+    const fallback = () => {
+      // If the X app handled the deep link, the page would have lost focus —
+      // and most browsers pause setTimeouts in backgrounded tabs, so we only
+      // hit this if we're still here (≈no app installed / link rejected).
+      if (document.visibilityState === "visible" && Date.now() - before < 2500) {
+        window.location.href = post.source;
+      }
+    };
+    window.location.href = `twitter://status?id=${tweetId}`;
+    setTimeout(fallback, 1200);
+  };
+
   return (
     <article className="card p-5">
       <header className="flex items-center justify-between gap-2">
@@ -120,7 +154,8 @@ function NewsCard({ post }: { post: NewsPost }) {
           href={post.source}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex shrink-0 items-center gap-1 rounded-full bg-canvas-soft/50 px-2.5 py-1 text-[11px] font-medium text-ink/80"
+          onClick={onSourceClick}
+          className="flex shrink-0 items-center gap-1 rounded-full bg-canvas-soft px-2.5 py-1 text-[11px] font-medium text-ink/80"
         >
           <ExternalLink className="h-3 w-3" />
           {shortHost(post.source)}

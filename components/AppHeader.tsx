@@ -7,7 +7,7 @@ export function AppHeader() {
     <header className="flex items-center justify-between pb-3">
       <button
         aria-label="Pesquisar"
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/55 backdrop-blur-sm transition active:scale-95"
+        className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas-soft transition active:scale-95"
       >
         <Search className="h-5 w-5 text-ink" strokeWidth={2.25} />
       </button>
@@ -22,7 +22,7 @@ export function AppHeader() {
         </div>
         <button
           aria-label="Notificações"
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/55 backdrop-blur-sm transition active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-canvas-soft transition active:scale-95"
         >
           <Bell className="h-5 w-5 text-ink" strokeWidth={2.25} />
         </button>

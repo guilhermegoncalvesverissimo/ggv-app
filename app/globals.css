@@ -1,9 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  /* Lavender base — matches the design reference */
-  --color-canvas: #c8bbf5;
-  --color-canvas-soft: #d6cdf7;
+  /* Page canvas — white. `canvas-soft` is a near-neutral light grey used for
+   * sub-surfaces (chip backgrounds, dividers, stat boxes inside cards) so
+   * they stay distinguishable from the white page + white card. */
+  --color-canvas: #ffffff;
+  --color-canvas-soft: #f3f3f6;
   --color-canvas-deep: #a594f9;
 
   --color-ink: #0e0e10;
@@ -33,7 +35,7 @@
 html,
 body {
   height: 100%;
-  background: linear-gradient(180deg, #c8bbf5 0%, #b4a5f7 100%);
+  background: #ffffff;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -60,16 +62,17 @@ body {
   display: none;
 }
 
-/* Card primitive */
+/* Card primitive — white-on-white needs a hairline + soft shadow to read. */
 .card {
   background: #ffffff;
   border-radius: var(--radius-card);
+  border: 1px solid rgba(15, 12, 41, 0.06);
   box-shadow:
-    0 1px 2px rgba(15, 12, 41, 0.04),
-    0 12px 32px -16px rgba(15, 12, 41, 0.18);
+    0 1px 2px rgba(15, 12, 41, 0.03),
+    0 8px 24px -12px rgba(15, 12, 41, 0.10);
 }
 
-/* Long-press feedback ring (used by Networking bubbles later) */
+/* Long-press feedback ring (used by Networking bubbles) */
 @keyframes pulseRing {
   0% { box-shadow: 0 0 0 0 rgba(124, 92, 245, 0.55); }
   100% { box-shadow: 0 0 0 18px rgba(124, 92, 245, 0); }

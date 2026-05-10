@@ -19,7 +19,7 @@ export function AccountPickerPill({
     <button
       type="button"
       onClick={onOpen}
-      className="flex items-center gap-2 rounded-full bg-white/55 px-3 py-1.5 text-sm font-medium text-ink backdrop-blur-sm transition active:scale-[0.98]"
+      className="flex items-center gap-2 rounded-full bg-canvas-soft px-3 py-1.5 text-sm font-medium text-ink transition active:scale-[0.98]"
     >
       <span
         className="h-3 w-3 shrink-0 rounded-full"
