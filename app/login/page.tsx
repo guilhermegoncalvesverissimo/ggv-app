@@ -20,7 +20,9 @@ function LoginForm() {
       const r = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        // Trim whitespace so iOS' paste-with-trailing-newline or a stray space
+        // from the soft keyboard doesn't turn a correct password into a 401.
+        body: JSON.stringify({ password: password.trim() }),
       });
       if (!r.ok) {
         const json = (await r.json().catch(() => ({}))) as { error?: string };
@@ -52,6 +54,10 @@ function LoginForm() {
         type="password"
         autoFocus
         autoComplete="current-password"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        inputMode="text"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Password"

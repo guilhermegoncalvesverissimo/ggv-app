@@ -17,14 +17,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const expected = process.env.APP_PASSWORD;
-  if (!expected) {
+  const expectedRaw = process.env.APP_PASSWORD;
+  if (!expectedRaw) {
     return NextResponse.json(
       { error: "Server is not configured (APP_PASSWORD missing)" },
       { status: 503 }
     );
   }
-  const provided = body.password ?? "";
+  // Trim both sides defensively — iOS paste, Vercel env quirks, etc. can
+  // introduce trailing whitespace that turns a correct password into a 401.
+  const expected = expectedRaw.trim();
+  const provided = (body.password ?? "").trim();
 
   // Pad to equal lengths for constant-time compare.
   const a = Buffer.from(provided);
