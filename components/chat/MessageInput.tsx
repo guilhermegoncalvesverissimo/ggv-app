@@ -71,7 +71,7 @@ export function MessageInput({
           type="submit"
           aria-label="Enviar"
           disabled={!text.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-white transition active:scale-95 disabled:opacity-40"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-on-accent transition active:scale-95 disabled:opacity-40"
         >
           <Send className="h-4 w-4" strokeWidth={2.5} />
         </button>

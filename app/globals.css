@@ -23,8 +23,13 @@
   --color-elevated: #0e0e10;
   --color-on-elevated: #ffffff;
 
-  --color-accent: #7c5cf5;
-  --color-accent-soft: #ede9fe;
+  /* Accent / primary action — used by chat bubbles, send button, empty-state
+   * icons, etc. Now mirrors `ink` (near-black in light, near-white in dark)
+   * so the brand feels strict monochrome. `--color-on-accent` is the foreground
+   * paired with it. */
+  --color-accent: #0e0e10;
+  --color-on-accent: #ffffff;
+  --color-accent-soft: #f3f3f6;
   --color-success: #22c55e;
   --color-warn: #f59e0b;
   --color-danger: #ef4444;
@@ -60,7 +65,10 @@
   --color-elevated: #2a2a32;
   --color-on-elevated: #f5f5f7;
 
-  --color-accent-soft: rgba(124, 92, 245, 0.18);
+  /* In dark mode, accent inverts to a light tone (still monochrome). */
+  --color-accent: #f5f5f7;
+  --color-on-accent: #0e0e10;
+  --color-accent-soft: rgba(255, 255, 255, 0.06);
 }
 
 :root {
@@ -114,10 +122,19 @@ body {
     0 8px 24px -12px var(--color-card-shadow);
 }
 
-/* Long-press feedback ring (used by Networking bubbles) */
+/* Long-press feedback ring (used by Networking bubbles). Uses the
+ * currentColor of the host element so it inherits the right tone — the
+ * bubble sets a dark stroke in light mode, light in dark. */
 @keyframes pulseRing {
-  0% { box-shadow: 0 0 0 0 rgba(124, 92, 245, 0.55); }
-  100% { box-shadow: 0 0 0 18px rgba(124, 92, 245, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(14, 14, 16, 0.45); }
+  100% { box-shadow: 0 0 0 18px rgba(14, 14, 16, 0); }
+}
+.dark .pulse-ring {
+  animation-name: pulseRingDark;
+}
+@keyframes pulseRingDark {
+  0% { box-shadow: 0 0 0 0 rgba(245, 245, 247, 0.45); }
+  100% { box-shadow: 0 0 0 18px rgba(245, 245, 247, 0); }
 }
 .pulse-ring {
   animation: pulseRing 0.9s ease-out forwards;

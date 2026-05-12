@@ -16,7 +16,7 @@ export function AppHeader() {
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-ink">Guilherme</span>
         <div className="relative">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-accent to-canvas-deep text-xs font-semibold text-white shadow-sm">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-xs font-semibold text-on-accent shadow-sm">
             GV
           </div>
           <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-canvas" />

@@ -67,7 +67,7 @@ export function MessageBubble({
             userSelect: "text",
             touchAction: "manipulation",
           }}
-          className={`group whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-accent px-3.5 py-2 text-left text-[15px] leading-snug text-white shadow-sm transition ${
+          className={`group whitespace-pre-wrap break-words rounded-2xl rounded-br-sm bg-accent px-3.5 py-2 text-left text-[15px] leading-snug text-on-accent shadow-sm transition ${
             pressing ? "scale-[0.99] opacity-90" : ""
           } ${pending ? "opacity-70" : ""}`}
         >
