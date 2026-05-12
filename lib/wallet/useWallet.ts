@@ -12,6 +12,7 @@ import {
   readWalletStorage,
   writeWalletStorage,
 } from "./migrate";
+import { normaliseAccountColor } from "./colors";
 
 function newId(prefix: string): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -30,6 +31,12 @@ export function useWallet() {
     if (initial.accounts.length === 0) {
       initial.accounts.push(makeDefaultAccount());
     }
+    // One-shot recolour for accounts created back when the default palette
+    // started with purple — swap those swatches to the new monochrome default.
+    initial.accounts = initial.accounts.map((a) => ({
+      ...a,
+      color: normaliseAccountColor(a.color),
+    }));
     setState(initial);
     setHydrated(true);
   }, []);

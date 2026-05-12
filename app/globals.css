@@ -4,7 +4,6 @@
   /* Page surfaces */
   --color-canvas: #ffffff;        /* page background */
   --color-canvas-soft: #f3f3f6;   /* chips, dividers, stat boxes */
-  --color-canvas-deep: #a594f9;   /* lavender accent for avatar gradients */
 
   /* Card surface — separate from canvas so it can shift independently
    * in dark mode (cards stay slightly raised above the page). */
@@ -51,7 +50,6 @@
 .dark {
   --color-canvas: #0e0e10;
   --color-canvas-soft: #1f1f25;
-  --color-canvas-deep: #8b75f0;
 
   --color-card-bg: #18181d;
   --color-card-border: rgba(255, 255, 255, 0.06);

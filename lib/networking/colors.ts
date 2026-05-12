@@ -1,16 +1,16 @@
-// Curated palette — purples + complementary accents that read well against
-// the lavender canvas.
+// Curated palette for hash-derived avatar gradients. No purples / violets /
+// indigos — those clash with the monochrome accent.
 const PALETTE = [
-  "#7c5cf5",
-  "#a594f9",
-  "#8b5cf6",
-  "#6366f1",
-  "#ec4899",
-  "#f97316",
-  "#22c55e",
-  "#06b6d4",
-  "#f59e0b",
-  "#ef4444",
+  "#ec4899", // pink
+  "#f97316", // orange
+  "#22c55e", // green
+  "#06b6d4", // cyan
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#3b82f6", // blue
+  "#14b8a6", // teal
+  "#84cc16", // lime
+  "#0ea5e9", // sky
 ] as const;
 
 /** Stable hash → palette index. Same name always gets the same color. */
