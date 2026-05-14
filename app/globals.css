@@ -137,3 +137,13 @@ body {
 .pulse-ring {
   animation: pulseRing 0.9s ease-out forwards;
 }
+
+/* Hide the floating bottom navbar whenever any Sheet is open. The Sheet
+ * primitive refcounts `body[data-sheet-open]`. Without this, on iOS Safari /
+ * standalone PWAs the navbar can paint on top of the sheet's action row
+ * (z-index quirks with fixed elements + transforms), eating the buttons. */
+body[data-sheet-open="true"] .bottom-nav-pill {
+  transform: translateY(calc(100% + 1.5rem));
+  opacity: 0;
+  pointer-events: none;
+}
