@@ -115,6 +115,23 @@ export async function createTransaction(input: {
   return json.transaction;
 }
 
+export async function patchTransaction(
+  id: string,
+  patch: {
+    accountId?: string;
+    type?: "income" | "expense";
+    amountCents?: number;
+    category?: string;
+    note?: string;
+    date?: string;
+  }
+): Promise<void> {
+  await api(`/api/wallet/transactions/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
 export async function deleteTransaction(id: string): Promise<void> {
   await api(`/api/wallet/transactions/${id}`, { method: "DELETE" });
 }

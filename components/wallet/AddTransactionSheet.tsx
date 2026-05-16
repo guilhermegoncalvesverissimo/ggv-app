@@ -5,12 +5,24 @@ import { Plus } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { type Category, categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
-import type { Account, TxType } from "@/lib/wallet/types";
+import type { Account, Transaction, TxType } from "@/lib/wallet/types";
+
+type TxPayload = {
+  accountId: string;
+  type: TxType;
+  amountCents: number;
+  category: string;
+  note?: string;
+  date: string;
+};
 
 export function AddTransactionSheet({
   open,
   onClose,
   onAdd,
+  onEdit,
+  onDelete,
+  editing,
   onAddCategory,
   customCategories,
   accounts,
@@ -18,14 +30,13 @@ export function AddTransactionSheet({
 }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (tx: {
-    accountId: string;
-    type: TxType;
-    amountCents: number;
-    category: string;
-    note?: string;
-    date: string;
-  }) => void;
+  onAdd: (tx: TxPayload) => void;
+  /** Called instead of onAdd when `editing` is set. */
+  onEdit?: (id: string, patch: TxPayload) => void;
+  /** Delete the transaction being edited. */
+  onDelete?: (id: string) => void;
+  /** When set, the sheet is in edit mode and prefills from this transaction. */
+  editing?: Transaction | null;
   onAddCategory: (input: {
     label: string;
     emoji: string;
@@ -48,20 +59,29 @@ export function AddTransactionSheet({
   const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    setNewCatOpen(false);
+    setNewCatEmoji("");
+    setNewCatLabel("");
+    if (editing) {
+      // Prefill from the transaction being edited.
+      setType(editing.type);
+      setAmount((editing.amountCents / 100).toFixed(2));
+      setCategory(editing.category);
+      setNote(editing.note ?? "");
+      setDate(editing.date);
+      setAccountId(editing.accountId);
+    } else {
       setType("expense");
       setAmount("");
       setCategory(null);
       setNote("");
       setDate(todayIso());
       setAccountId(defaultAccountId);
-      setNewCatOpen(false);
-      setNewCatEmoji("");
-      setNewCatLabel("");
-      const t = setTimeout(() => amountRef.current?.focus(), 250);
-      return () => clearTimeout(t);
     }
-  }, [open, defaultAccountId]);
+    const t = setTimeout(() => amountRef.current?.focus(), 250);
+    return () => clearTimeout(t);
+  }, [open, defaultAccountId, editing]);
 
   // `customCategories` in deps so the list refreshes when one is created.
   const visibleCategories = useMemo(
@@ -100,19 +120,40 @@ export function AddTransactionSheet({
 
   const submit = () => {
     if (!valid || !category) return;
-    onAdd({
+    const payload: TxPayload = {
       accountId,
       type,
       amountCents: cents,
       category,
       note: note.trim() || undefined,
       date,
-    });
+    };
+    if (editing && onEdit) onEdit(editing.id, payload);
+    else onAdd(payload);
     onClose();
   };
 
   return (
     <Sheet open={open} onClose={onClose}>
+      {editing && (
+        <div className="flex items-center justify-between px-1 pb-3">
+          <h2 className="text-base font-semibold tracking-tight">
+            Editar transação
+          </h2>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => {
+                onDelete(editing.id);
+                onClose();
+              }}
+              className="text-sm font-medium text-danger"
+            >
+              Apagar
+            </button>
+          )}
+        </div>
+      )}
       {/* Type toggle */}
       <div className="flex rounded-full bg-canvas-soft/40 p-1">
         {(["expense", "income"] as TxType[]).map((t) => (

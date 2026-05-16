@@ -17,7 +17,7 @@ import { CategoriesOverview } from "./CategoriesOverview";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
-import type { Account } from "@/lib/wallet/types";
+import type { Account, Transaction } from "@/lib/wallet/types";
 
 const TX_LIMIT = 20;
 
@@ -31,10 +31,12 @@ export function WalletBoard() {
     hydrated,
     addAccount,
     addTransaction,
+    updateTransaction,
     removeTransaction,
     addCategory,
   } = useWallet();
   const [addTxOpen, setAddTxOpen] = useState(false);
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>("thisMonth");
@@ -205,7 +207,10 @@ export function WalletBoard() {
         </div>
       </section>
 
-      <CategoriesOverview transactions={filtered} />
+      <CategoriesOverview
+        transactions={filtered}
+        onEditTransaction={setEditingTx}
+      />
 
       {/* Transaction list */}
       <section className="card overflow-hidden">
@@ -236,6 +241,7 @@ export function WalletBoard() {
                   removeTransaction(tx.id);
                   if (openSwipeId === tx.id) setOpenSwipeId(null);
                 }}
+                onTap={() => setEditingTx(tx)}
               />
             ))}
           </ul>
@@ -256,6 +262,21 @@ export function WalletBoard() {
         open={addTxOpen}
         onClose={() => setAddTxOpen(false)}
         onAdd={addTransaction}
+        onAddCategory={addCategory}
+        customCategories={customCategories}
+        accounts={accounts}
+        defaultAccountId={defaultAccountId}
+      />
+      <AddTransactionSheet
+        open={!!editingTx}
+        onClose={() => setEditingTx(null)}
+        onAdd={addTransaction}
+        onEdit={updateTransaction}
+        onDelete={(id) => {
+          removeTransaction(id);
+          if (openSwipeId === id) setOpenSwipeId(null);
+        }}
+        editing={editingTx}
         onAddCategory={addCategory}
         customCategories={customCategories}
         accounts={accounts}

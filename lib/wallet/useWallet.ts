@@ -13,6 +13,7 @@ import {
   deleteTransaction,
   fetchWallet,
   patchAccount,
+  patchTransaction,
 } from "./api";
 
 const LEGACY_KEY = "ggv:wallet:v2";
@@ -295,6 +296,41 @@ export function useWallet() {
     []
   );
 
+  const updateTransaction = useCallback(
+    (
+      id: string,
+      patch: {
+        accountId?: string;
+        type?: "income" | "expense";
+        amountCents?: number;
+        category?: string;
+        note?: string;
+        date?: string;
+      }
+    ) => {
+      setTransactions((prev) =>
+        prev.map((t) =>
+          t.id === id
+            ? {
+                ...t,
+                ...patch,
+                note: "note" in patch ? patch.note : t.note,
+              }
+            : t
+        )
+      );
+      if (id.startsWith("temp_")) return;
+      void (async () => {
+        try {
+          await patchTransaction(id, patch);
+        } catch {
+          scheduleReconcile();
+        }
+      })();
+    },
+    [scheduleReconcile]
+  );
+
   const removeTransaction = useCallback(
     (id: string) => {
       setTransactions((prev) => prev.filter((t) => t.id !== id));
@@ -388,6 +424,7 @@ export function useWallet() {
     renameAccount,
     removeAccount,
     addTransaction,
+    updateTransaction,
     removeTransaction,
     addCategory,
     removeCategory,

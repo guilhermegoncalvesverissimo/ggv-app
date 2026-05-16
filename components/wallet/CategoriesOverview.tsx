@@ -34,8 +34,10 @@ type Slice = {
 
 export function CategoriesOverview({
   transactions,
+  onEditTransaction,
 }: {
   transactions: Transaction[];
+  onEditTransaction?: (tx: Transaction) => void;
 }) {
   const [mode, setMode] = useState<TxType>("expense");
   const [unit, setUnit] = useState<"pct" | "eur">("pct");
@@ -272,30 +274,38 @@ export function CategoriesOverview({
 
             <ul className="app-scroll mt-2 max-h-[55vh] divide-y divide-canvas-soft/60 overflow-y-auto">
               {catTxs.map((t) => (
-                <li
-                  key={t.id}
-                  className="flex items-center gap-3 py-2.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm text-ink">
-                      {formatDateRelative(t.date)}
-                    </div>
-                    {t.note && (
-                      <div className="truncate text-xs text-muted">
-                        {t.note}
-                      </div>
-                    )}
-                  </div>
-                  <span
-                    className={`shrink-0 text-sm font-semibold tabular-nums ${
-                      mode === "income" ? "text-success" : "text-ink"
-                    }`}
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onEditTransaction) {
+                        setOpenCat(null);
+                        onEditTransaction(t);
+                      }
+                    }}
+                    className="flex w-full items-center gap-3 py-2.5 text-left transition active:scale-[0.99]"
                   >
-                    {formatCents(
-                      mode === "income" ? t.amountCents : -t.amountCents,
-                      { signed: true }
-                    )}
-                  </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-ink">
+                        {formatDateRelative(t.date)}
+                      </div>
+                      {t.note && (
+                        <div className="truncate text-xs text-muted">
+                          {t.note}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`shrink-0 text-sm font-semibold tabular-nums ${
+                        mode === "income" ? "text-success" : "text-ink"
+                      }`}
+                    >
+                      {formatCents(
+                        mode === "income" ? t.amountCents : -t.amountCents,
+                        { signed: true }
+                      )}
+                    </span>
+                  </button>
                 </li>
               ))}
             </ul>

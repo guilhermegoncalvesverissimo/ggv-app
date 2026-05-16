@@ -21,6 +21,7 @@ export function SwipeableTxRow({
   onRequestOpen,
   onClose,
   onDelete,
+  onTap,
 }: {
   tx: Transaction;
   account: Account | undefined;
@@ -29,6 +30,8 @@ export function SwipeableTxRow({
   onRequestOpen: () => void;
   onClose: () => void;
   onDelete: () => void;
+  /** Fires on a plain tap (not a swipe, not while open) → opens edit. */
+  onTap?: () => void;
 }) {
   const cat = categoryById(tx.category);
   const signed = tx.type === "income" ? tx.amountCents : -tx.amountCents;
@@ -41,6 +44,9 @@ export function SwipeableTxRow({
   const startY = useRef<number | null>(null);
   const startTx = useRef(0);
   const decided = useRef<"horizontal" | "vertical" | null>(null);
+  // True after a horizontal swipe so the click that browsers fire on
+  // pointer-up doesn't get mistaken for a tap (which would open the editor).
+  const swiped = useRef(false);
 
   // Sync with parent: when openId changes externally, animate to the new state.
   useEffect(() => {
@@ -98,6 +104,7 @@ export function SwipeableTxRow({
   const onPointerUp = (e: React.PointerEvent) => {
     if (exiting) return;
     const wasHorizontal = decided.current === "horizontal";
+    swiped.current = wasHorizontal;
     setDragging(false);
     decided.current = null;
     startX.current = null;
@@ -121,12 +128,19 @@ export function SwipeableTxRow({
   };
 
   const onContentClick = () => {
-    // When the row is open and the user taps it, treat the tap as "close".
     if (exiting || dragging) return;
+    // Swallow the click that follows a swipe gesture.
+    if (swiped.current) {
+      swiped.current = false;
+      return;
+    }
+    // When the row is open, a tap closes it instead of opening the editor.
     if (isOpen) {
       setTranslate(0);
       onClose();
+      return;
     }
+    onTap?.();
   };
 
   return (
