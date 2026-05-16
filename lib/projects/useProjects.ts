@@ -1,59 +1,141 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { type Project, STORAGE_KEY } from "./types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { Project } from "./types";
+import {
+  createProject,
+  deleteProject,
+  fetchProjects,
+  patchProject,
+} from "./api";
 
-function readStorage(): Project[] {
+const LEGACY_KEY = "ggv:projects:v1";
+const MIGRATED_FLAG = "ggv:projects:migrated";
+
+export type ProjectInput = Omit<Project, "id" | "createdAt" | "updatedAt">;
+
+function tempId(): string {
+  return `temp_p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function readLegacy(): Project[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(LEGACY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed as Project[];
+    return Array.isArray(parsed) ? (parsed as Project[]) : [];
   } catch {
     return [];
   }
 }
-
-function writeStorage(projects: Project[]) {
-  if (typeof window === "undefined") return;
+function hasMigrated(): boolean {
+  if (typeof window === "undefined") return true;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    return window.localStorage.getItem(MIGRATED_FLAG) === "true";
   } catch {
-    // quota / privacy mode — silently ignore.
+    return false;
+  }
+}
+function markMigrated() {
+  try {
+    window.localStorage.setItem(MIGRATED_FLAG, "true");
+  } catch {
+    /* ignore */
   }
 }
 
-function newId(): string {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
+async function migrateLegacy(): Promise<void> {
+  for (const p of readLegacy()) {
+    try {
+      await createProject({
+        name: p.name,
+        description: p.description,
+        url: p.url,
+        tags: p.tags ?? [],
+        status: p.status,
+        emoji: p.emoji,
+        color: p.color,
+        createdAt: p.createdAt,
+      });
+    } catch {
+      /* skip and continue — partial-failure tolerant */
+    }
   }
-  return `p_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  markMigrated();
 }
-
-export type ProjectInput = Omit<Project, "id" | "createdAt" | "updatedAt">;
 
 export function useProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const reconcileScheduled = useRef(false);
 
-  useEffect(() => {
-    setProjects(readStorage());
-    setHydrated(true);
+  const refetch = useCallback(async () => {
+    try {
+      setProjects(await fetchProjects());
+    } catch {
+      /* 401 redirects; keep optimistic state otherwise */
+    }
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
-    writeStorage(projects);
-  }, [projects, hydrated]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const fresh = await fetchProjects();
+        if (cancelled) return;
+        if (
+          fresh.length === 0 &&
+          !hasMigrated() &&
+          readLegacy().length > 0
+        ) {
+          await migrateLegacy();
+          const final = await fetchProjects();
+          if (cancelled) return;
+          setProjects(final);
+        } else {
+          markMigrated();
+          setProjects(fresh);
+        }
+      } catch {
+        /* swallow */
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const scheduleReconcile = useCallback(() => {
+    if (reconcileScheduled.current) return;
+    reconcileScheduled.current = true;
+    setTimeout(() => {
+      reconcileScheduled.current = false;
+      void refetch();
+    }, 300);
+  }, [refetch]);
 
   const addProject = useCallback((input: ProjectInput) => {
     const now = Date.now();
-    setProjects((prev) => [
-      ...prev,
-      { ...input, id: newId(), createdAt: now, updatedAt: now },
-    ]);
+    const optimistic: Project = {
+      ...input,
+      id: tempId(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    setProjects((prev) => [optimistic, ...prev]);
+    void (async () => {
+      try {
+        const created = await createProject(input);
+        setProjects((prev) =>
+          prev.map((p) => (p.id === optimistic.id ? created : p))
+        );
+      } catch {
+        setProjects((prev) => prev.filter((p) => p.id !== optimistic.id));
+      }
+    })();
   }, []);
 
   const updateProject = useCallback(
@@ -63,13 +145,32 @@ export function useProjects() {
           p.id === id ? { ...p, ...patch, updatedAt: Date.now() } : p
         )
       );
+      if (id.startsWith("temp_")) return;
+      void (async () => {
+        try {
+          await patchProject(id, patch);
+        } catch {
+          scheduleReconcile();
+        }
+      })();
     },
-    []
+    [scheduleReconcile]
   );
 
-  const removeProject = useCallback((id: string) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
-  }, []);
+  const removeProject = useCallback(
+    (id: string) => {
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      if (id.startsWith("temp_")) return;
+      void (async () => {
+        try {
+          await deleteProject(id);
+        } catch {
+          scheduleReconcile();
+        }
+      })();
+    },
+    [scheduleReconcile]
+  );
 
   return {
     projects,
