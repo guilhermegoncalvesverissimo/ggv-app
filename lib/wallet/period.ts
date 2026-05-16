@@ -1,58 +1,84 @@
-export type Period = "thisMonth" | "lastMonth" | "year" | "all";
+/**
+ * Period model. A period is one of:
+ *  - a specific calendar month  { kind: "month", year, month(0-11) }
+ *  - a calendar year            { kind: "year", year }
+ *  - all time                   { kind: "all" }
+ *
+ * The wallet defaults to the current month and the user can step
+ * backwards/forwards with arrows.
+ */
+export type Period =
+  | { kind: "month"; year: number; month: number }
+  | { kind: "year"; year: number }
+  | { kind: "all" };
 
-export const PERIOD_LABELS: Record<Period, string> = {
-  thisMonth: "Este mês",
-  lastMonth: "Mês anterior",
-  year: "Este ano",
-  all: "Tudo",
-};
+const MONTHS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
 
-export const HERO_LABELS: Record<Period, string> = {
-  thisMonth: "Saldo deste mês",
-  lastMonth: "Saldo do mês anterior",
-  year: "Saldo deste ano",
-  all: "Saldo total",
-};
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const pad = (n: number) => String(n).padStart(2, "0");
 
-/** Returns inclusive `[fromIso, toIso]` window for the given period, or null for "all". */
+export function currentMonth(now = new Date()): Period {
+  return { kind: "month", year: now.getFullYear(), month: now.getMonth() };
+}
+
+/** Short label for the stepper / list header — "Maio 2026", "2026", "Tudo". */
+export function periodLabel(p: Period): string {
+  if (p.kind === "month") return `${cap(MONTHS[p.month])} ${p.year}`;
+  if (p.kind === "year") return `${p.year}`;
+  return "Tudo";
+}
+
+/** Hero card label — "Saldo de maio 2026", "Saldo de 2026", "Saldo total". */
+export function heroLabel(p: Period): string {
+  if (p.kind === "month") return `Saldo de ${MONTHS[p.month]} ${p.year}`;
+  if (p.kind === "year") return `Saldo de ${p.year}`;
+  return "Saldo total";
+}
+
+/** Inclusive `[fromIso, toIso]` window, or null for "all". */
 export function periodRange(
-  period: Period,
-  now = new Date()
+  p: Period
 ): { fromIso: string; toIso: string } | null {
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  switch (period) {
-    case "thisMonth":
-      return { fromIso: iso(y, m, 1), toIso: iso(y, m, lastDay(y, m)) };
-    case "lastMonth": {
-      const prevYear = m === 0 ? y - 1 : y;
-      const prevMonth = m === 0 ? 11 : m - 1;
-      return {
-        fromIso: iso(prevYear, prevMonth, 1),
-        toIso: iso(prevYear, prevMonth, lastDay(prevYear, prevMonth)),
-      };
-    }
-    case "year":
-      return { fromIso: iso(y, 0, 1), toIso: iso(y, 11, 31) };
-    case "all":
-      return null;
+  if (p.kind === "all") return null;
+  if (p.kind === "year") {
+    return { fromIso: `${p.year}-01-01`, toIso: `${p.year}-12-31` };
   }
+  const last = new Date(p.year, p.month + 1, 0).getDate();
+  const m = pad(p.month + 1);
+  return {
+    fromIso: `${p.year}-${m}-01`,
+    toIso: `${p.year}-${m}-${pad(last)}`,
+  };
 }
 
-export function isInPeriod(
-  iso: string,
-  period: Period,
-  now = new Date()
-): boolean {
-  const range = periodRange(period, now);
-  if (!range) return true;
-  return iso >= range.fromIso && iso <= range.toIso;
+export function isInPeriod(iso: string, p: Period): boolean {
+  const r = periodRange(p);
+  if (!r) return true;
+  return iso >= r.fromIso && iso <= r.toIso;
 }
 
-function iso(y: number, m: number, d: number): string {
-  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-}
-
-function lastDay(y: number, m: number): number {
-  return new Date(y, m + 1, 0).getDate();
+/** Step the period by `delta` units (months for month-mode, years for
+ *  year-mode). "all" has nothing to step. */
+export function stepPeriod(p: Period, delta: number): Period {
+  if (p.kind === "month") {
+    const d = new Date(p.year, p.month + delta, 1);
+    return { kind: "month", year: d.getFullYear(), month: d.getMonth() };
+  }
+  if (p.kind === "year") {
+    return { kind: "year", year: p.year + delta };
+  }
+  return p;
 }

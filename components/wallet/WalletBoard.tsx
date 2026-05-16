@@ -6,12 +6,13 @@ import { useWallet } from "@/lib/wallet/useWallet";
 import { formatCents } from "@/lib/wallet/format";
 import {
   type Period,
-  HERO_LABELS,
+  currentMonth,
+  heroLabel,
   isInPeriod,
-  PERIOD_LABELS,
+  periodLabel,
 } from "@/lib/wallet/period";
 import { AddTransactionSheet } from "./AddTransactionSheet";
-import { PeriodChips } from "./PeriodChips";
+import { PeriodSelector } from "./PeriodSelector";
 import { Sparkline } from "./Sparkline";
 import { CategoriesOverview } from "./CategoriesOverview";
 import { AccountSheet } from "./AccountSheet";
@@ -39,7 +40,7 @@ export function WalletBoard() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
-  const [period, setPeriod] = useState<Period>("thisMonth");
+  const [period, setPeriod] = useState<Period>(() => currentMonth());
   const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
 
   // Map for fast account lookup in rows.
@@ -51,9 +52,8 @@ export function WalletBoard() {
 
   // Filter once for the active period + account — shared by stats + list.
   const filtered = useMemo(() => {
-    const now = new Date();
     return transactions.filter((t) => {
-      if (!isInPeriod(t.date, period, now)) return false;
+      if (!isInPeriod(t.date, period)) return false;
       if (accountFilter !== "all" && t.accountId !== accountFilter) return false;
       return true;
     });
@@ -166,14 +166,14 @@ export function WalletBoard() {
             onOpen={() => setAccountSheetOpen(true)}
           />
         </div>
-        <PeriodChips value={period} onChange={setPeriod} />
+        <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
       {/* Hero: net balance */}
       <section className="card p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted">
           <Wallet className="h-4 w-4" />
-          {HERO_LABELS[period]}
+          {heroLabel(period)}
         </div>
         <div className="mt-2 flex items-baseline gap-2">
           <span
@@ -217,7 +217,7 @@ export function WalletBoard() {
         <div className="flex items-center justify-between px-5 pb-2 pt-5">
           <h2 className="text-sm font-semibold tracking-tight">Transações</h2>
           <span className="text-xs text-muted">
-            {filtered.length} · {PERIOD_LABELS[period]}
+            {filtered.length} · {periodLabel(period)}
           </span>
         </div>
         {ordered.length === 0 ? (
