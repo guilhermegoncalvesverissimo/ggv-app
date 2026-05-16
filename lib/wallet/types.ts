@@ -24,6 +24,12 @@ export type Transaction = {
   createdAt: number;
 };
 
+/** Recurring monthly budget for a category. */
+export type Budget = {
+  category: string;
+  amountCents: number;
+};
+
 export type WalletState = {
   version: 2;
   accounts: Account[];

@@ -1,4 +1,4 @@
-import type { Account, Transaction } from "./types";
+import type { Account, Budget, Transaction } from "./types";
 import type { Category } from "./categories";
 
 /** Typed wrappers around /api/wallet*. Same-origin, session-cookie auth.
@@ -40,17 +40,30 @@ export async function fetchWallet(): Promise<{
   accounts: Account[];
   transactions: Transaction[];
   categories: Category[];
+  budgets: Budget[];
 }> {
   const j = await api<{
     accounts: Account[];
     transactions: Transaction[];
     categories?: Category[];
+    budgets?: Budget[];
   }>("/api/wallet");
   return {
     accounts: j.accounts,
     transactions: j.transactions,
     categories: j.categories ?? [],
+    budgets: j.budgets ?? [],
   };
+}
+
+export async function upsertBudget(
+  category: string,
+  amountCents: number
+): Promise<void> {
+  await api("/api/wallet/budgets", {
+    method: "PUT",
+    body: JSON.stringify({ category, amountCents }),
+  });
 }
 
 export async function createCategory(input: {

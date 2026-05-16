@@ -15,6 +15,7 @@ import { AddTransactionSheet } from "./AddTransactionSheet";
 import { PeriodSelector } from "./PeriodSelector";
 import { Sparkline } from "./Sparkline";
 import { CategoriesOverview } from "./CategoriesOverview";
+import { BudgetsCard } from "./BudgetsCard";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
@@ -29,6 +30,7 @@ export function WalletBoard() {
     accounts,
     transactions,
     customCategories,
+    budgets,
     hydrated,
     addAccount,
     addTransaction,
@@ -206,6 +208,8 @@ export function WalletBoard() {
           </div>
         </div>
       </section>
+
+      <BudgetsCard transactions={transactions} budgets={budgets} />
 
       <CategoriesOverview
         transactions={filtered}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Account, Transaction } from "./types";
+import type { Budget } from "./types";
 import { type Category, setCustomCategories } from "./categories";
 import { normaliseAccountColor } from "./colors";
 import {
@@ -14,6 +15,7 @@ import {
   fetchWallet,
   patchAccount,
   patchTransaction,
+  upsertBudget,
 } from "./api";
 
 const LEGACY_KEY = "ggv:wallet:v2";
@@ -102,6 +104,7 @@ export function useWallet() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [customCategories, setCustomCats] = useState<Category[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const reconcileScheduled = useRef(false);
 
@@ -118,6 +121,7 @@ export function useWallet() {
       setAccounts(w.accounts);
       setTransactions(w.transactions);
       applyCats(w.categories);
+      setBudgets(w.budgets);
     } catch {
       /* api.ts redirects on 401; keep optimistic state otherwise */
     }
@@ -140,11 +144,13 @@ export function useWallet() {
           setAccounts(fresh.accounts);
           setTransactions(fresh.transactions);
           applyCats(fresh.categories);
+          setBudgets(fresh.budgets);
         } else {
           markMigrated();
           setAccounts(w.accounts);
           setTransactions(w.transactions);
           applyCats(w.categories);
+          setBudgets(w.budgets);
         }
       } catch {
         /* swallow — 401 redirects, other errors leave empty */
@@ -415,10 +421,31 @@ export function useWallet() {
     [scheduleReconcile]
   );
 
+  /** Set (or clear, when amountCents<=0) a category's monthly budget. */
+  const setBudget = useCallback(
+    (category: string, amountCents: number) => {
+      setBudgets((prev) => {
+        const without = prev.filter((b) => b.category !== category);
+        return amountCents > 0
+          ? [...without, { category, amountCents }]
+          : without;
+      });
+      void (async () => {
+        try {
+          await upsertBudget(category, amountCents);
+        } catch {
+          scheduleReconcile();
+        }
+      })();
+    },
+    [scheduleReconcile]
+  );
+
   return {
     accounts,
     transactions,
     customCategories,
+    budgets,
     hydrated,
     addAccount,
     renameAccount,
@@ -426,6 +453,7 @@ export function useWallet() {
     addTransaction,
     updateTransaction,
     removeTransaction,
+    setBudget,
     addCategory,
     removeCategory,
   };

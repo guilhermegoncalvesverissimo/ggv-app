@@ -76,6 +76,7 @@ export async function GET() {
     { data: acc, error: aErr },
     { data: tx, error: tErr },
     { data: cats, error: cErr },
+    { data: buds, error: bErr },
   ] = await Promise.all([
     sb
       .from("ggv_accounts")
@@ -86,6 +87,7 @@ export async function GET() {
       .from("ggv_categories")
       .select("*")
       .order("created_at", { ascending: true }),
+    sb.from("ggv_budgets").select("category, amount_cents"),
   ]);
 
   // Accounts/transactions tables missing → degrade gracefully.
@@ -100,15 +102,22 @@ export async function GET() {
   if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });
   if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
 
-  // ggv_categories is independent — if just that table is missing, return the
-  // rest and an empty categories list (built-ins still work client-side).
+  // ggv_categories / ggv_budgets are independent — if just one is missing,
+  // return the rest with an empty list for the missing one.
   const categories = tableMissing(cErr?.message)
     ? []
     : ((cats ?? []) as CategoryRow[]).map(toCategory);
+
+  const budgets = tableMissing(bErr?.message)
+    ? []
+    : (
+        (buds ?? []) as { category: string; amount_cents: number }[]
+      ).map((b) => ({ category: b.category, amountCents: b.amount_cents }));
 
   return NextResponse.json({
     accounts: ((acc ?? []) as AccountRow[]).map(toAccount),
     transactions: ((tx ?? []) as TxRow[]).map(toTx),
     categories,
+    budgets,
   });
 }
