@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Account, Transaction } from "./types";
+import { type Category, setCustomCategories } from "./categories";
 import { normaliseAccountColor } from "./colors";
 import {
   createAccount,
+  createCategory,
   createTransaction,
   deleteAccount,
+  deleteCategory,
   deleteTransaction,
   fetchWallet,
   patchAccount,
@@ -97,18 +100,27 @@ async function migrateLegacy(): Promise<void> {
 export function useWallet() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [customCategories, setCustomCats] = useState<Category[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const reconcileScheduled = useRef(false);
+
+  // Keep the module registry in sync so categoryById/categoriesFor resolve
+  // custom categories everywhere without prop drilling.
+  const applyCats = useCallback((cats: Category[]) => {
+    setCustomCats(cats);
+    setCustomCategories(cats);
+  }, []);
 
   const refetch = useCallback(async () => {
     try {
       const w = await fetchWallet();
       setAccounts(w.accounts);
       setTransactions(w.transactions);
+      applyCats(w.categories);
     } catch {
       /* api.ts redirects on 401; keep optimistic state otherwise */
     }
-  }, []);
+  }, [applyCats]);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,10 +138,12 @@ export function useWallet() {
           if (cancelled) return;
           setAccounts(fresh.accounts);
           setTransactions(fresh.transactions);
+          applyCats(fresh.categories);
         } else {
           markMigrated();
           setAccounts(w.accounts);
           setTransactions(w.transactions);
+          applyCats(w.categories);
         }
       } catch {
         /* swallow — 401 redirects, other errors leave empty */
@@ -296,14 +310,86 @@ export function useWallet() {
     [scheduleReconcile]
   );
 
+  const addCategory = useCallback(
+    (input: {
+      label: string;
+      emoji: string;
+      type: "income" | "expense";
+    }): Category | null => {
+      const label = input.label.trim();
+      const emoji = input.emoji.trim();
+      if (!label || !emoji) return null;
+      const optimistic: Category = {
+        id: tempId("c"),
+        label,
+        emoji,
+        type: input.type,
+        custom: true,
+      };
+      setCustomCats((prev) => {
+        const next = [...prev, optimistic];
+        setCustomCategories(next);
+        return next;
+      });
+
+      void (async () => {
+        try {
+          const created = await createCategory({
+            label,
+            emoji,
+            type: input.type,
+          });
+          setCustomCats((prev) => {
+            const next = prev.map((c) =>
+              c.id === optimistic.id ? created : c
+            );
+            setCustomCategories(next);
+            return next;
+          });
+        } catch {
+          setCustomCats((prev) => {
+            const next = prev.filter((c) => c.id !== optimistic.id);
+            setCustomCategories(next);
+            return next;
+          });
+        }
+      })();
+
+      return optimistic;
+    },
+    []
+  );
+
+  const removeCategory = useCallback(
+    (id: string) => {
+      setCustomCats((prev) => {
+        const next = prev.filter((c) => c.id !== id);
+        setCustomCategories(next);
+        return next;
+      });
+      if (id.startsWith("temp_")) return;
+      void (async () => {
+        try {
+          await deleteCategory(id);
+        } catch {
+          scheduleReconcile();
+        }
+      })();
+    },
+    [scheduleReconcile]
+  );
+
   return {
     accounts,
     transactions,
+    customCategories,
     hydrated,
     addAccount,
     renameAccount,
     removeAccount,
     addTransaction,
     removeTransaction,
+    addCategory,
+    removeCategory,
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/news/supabase";
 import type { Account, Transaction } from "@/lib/wallet/types";
+import type { Category } from "@/lib/wallet/categories";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,6 +22,12 @@ type TxRow = {
   note: string | null;
   date: string;
   created_at: string;
+};
+type CategoryRow = {
+  id: string;
+  label: string;
+  emoji: string;
+  type: "income" | "expense";
 };
 
 function toAccount(r: AccountRow): Account {
@@ -44,6 +51,18 @@ function toTx(r: TxRow): Transaction {
     createdAt: new Date(r.created_at).getTime(),
   };
 }
+function toCategory(r: CategoryRow): Category {
+  return {
+    id: r.id,
+    label: r.label,
+    emoji: r.emoji,
+    type: r.type,
+    custom: true,
+  };
+}
+
+const tableMissing = (msg?: string) =>
+  !!msg && /could not find the table|does not exist/i.test(msg);
 
 export async function GET() {
   const sb = getSupabaseAdmin();
@@ -53,26 +72,43 @@ export async function GET() {
       { status: 503 }
     );
   }
-  const [{ data: acc, error: aErr }, { data: tx, error: tErr }] =
-    await Promise.all([
-      sb.from("ggv_accounts").select("*").order("created_at", { ascending: true }),
-      sb.from("ggv_transactions").select("*"),
-    ]);
-  // Tables not created yet → degrade gracefully so the UI shows its empty
-  // state instead of a console full of 500s.
-  const tableMissing = (msg?: string) =>
-    !!msg && /could not find the table|does not exist/i.test(msg);
+  const [
+    { data: acc, error: aErr },
+    { data: tx, error: tErr },
+    { data: cats, error: cErr },
+  ] = await Promise.all([
+    sb
+      .from("ggv_accounts")
+      .select("*")
+      .order("created_at", { ascending: true }),
+    sb.from("ggv_transactions").select("*"),
+    sb
+      .from("ggv_categories")
+      .select("*")
+      .order("created_at", { ascending: true }),
+  ]);
+
+  // Accounts/transactions tables missing → degrade gracefully.
   if (tableMissing(aErr?.message) || tableMissing(tErr?.message)) {
     return NextResponse.json({
       accounts: [],
       transactions: [],
+      categories: [],
       note: "storage_not_configured",
     });
   }
   if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });
   if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
+
+  // ggv_categories is independent — if just that table is missing, return the
+  // rest and an empty categories list (built-ins still work client-side).
+  const categories = tableMissing(cErr?.message)
+    ? []
+    : ((cats ?? []) as CategoryRow[]).map(toCategory);
+
   return NextResponse.json({
     accounts: ((acc ?? []) as AccountRow[]).map(toAccount),
     transactions: ((tx ?? []) as TxRow[]).map(toTx),
+    categories,
   });
 }

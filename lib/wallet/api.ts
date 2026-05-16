@@ -1,4 +1,5 @@
 import type { Account, Transaction } from "./types";
+import type { Category } from "./categories";
 
 /** Typed wrappers around /api/wallet*. Same-origin, session-cookie auth.
  *  Bounces to /login on 401. Mirrors lib/networking/api.ts. */
@@ -38,10 +39,34 @@ async function api<T>(
 export async function fetchWallet(): Promise<{
   accounts: Account[];
   transactions: Transaction[];
+  categories: Category[];
 }> {
-  return api<{ accounts: Account[]; transactions: Transaction[] }>(
-    "/api/wallet"
-  );
+  const j = await api<{
+    accounts: Account[];
+    transactions: Transaction[];
+    categories?: Category[];
+  }>("/api/wallet");
+  return {
+    accounts: j.accounts,
+    transactions: j.transactions,
+    categories: j.categories ?? [],
+  };
+}
+
+export async function createCategory(input: {
+  label: string;
+  emoji: string;
+  type: "income" | "expense";
+}): Promise<Category> {
+  const json = await api<{ category: Category }>("/api/wallet/categories", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return json.category;
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await api(`/api/wallet/categories/${id}`, { method: "DELETE" });
 }
 
 export async function createAccount(input: {

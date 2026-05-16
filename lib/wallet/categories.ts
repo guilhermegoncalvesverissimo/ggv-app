@@ -5,6 +5,8 @@ export type Category = {
   label: string;
   emoji: string;
   type: TxType;
+  /** true for user-created categories (stored in Supabase). */
+  custom?: boolean;
 };
 
 export const CATEGORIES: Category[] = [
@@ -31,10 +33,24 @@ export const CATEGORIES: Category[] = [
 
 const BY_ID = new Map(CATEGORIES.map((c) => [c.id, c]));
 
+/**
+ * Module-level registry of the user's custom categories. useWallet keeps this
+ * in sync after loading them from Supabase, so the pure `categoryById` /
+ * `categoriesFor` helpers (used in many components) resolve custom categories
+ * too — no prop drilling needed. Client-only; SSR renders built-ins.
+ */
+let CUSTOM = new Map<string, Category>();
+
+export function setCustomCategories(list: Category[]): void {
+  CUSTOM = new Map(list.map((c) => [c.id, { ...c, custom: true }]));
+}
+
 export function categoryById(id: string): Category | undefined {
-  return BY_ID.get(id);
+  return BY_ID.get(id) ?? CUSTOM.get(id);
 }
 
 export function categoriesFor(type: TxType): Category[] {
-  return CATEGORIES.filter((c) => c.type === type);
+  const builtIn = CATEGORIES.filter((c) => c.type === type);
+  const custom = [...CUSTOM.values()].filter((c) => c.type === type);
+  return [...builtIn, ...custom];
 }

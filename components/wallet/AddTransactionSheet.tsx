@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
-import { categoriesFor } from "@/lib/wallet/categories";
+import { type Category, categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
 import type { Account, TxType } from "@/lib/wallet/types";
 
@@ -10,6 +11,8 @@ export function AddTransactionSheet({
   open,
   onClose,
   onAdd,
+  onAddCategory,
+  customCategories,
   accounts,
   defaultAccountId,
 }: {
@@ -23,6 +26,13 @@ export function AddTransactionSheet({
     note?: string;
     date: string;
   }) => void;
+  onAddCategory: (input: {
+    label: string;
+    emoji: string;
+    type: TxType;
+  }) => Category | null;
+  /** Passed so the category list recomputes when a custom one is added. */
+  customCategories: Category[];
   accounts: Account[];
   defaultAccountId: string;
 }) {
@@ -32,6 +42,9 @@ export function AddTransactionSheet({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(todayIso());
   const [accountId, setAccountId] = useState<string>(defaultAccountId);
+  const [newCatOpen, setNewCatOpen] = useState(false);
+  const [newCatEmoji, setNewCatEmoji] = useState("");
+  const [newCatLabel, setNewCatLabel] = useState("");
   const amountRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -42,12 +55,33 @@ export function AddTransactionSheet({
       setNote("");
       setDate(todayIso());
       setAccountId(defaultAccountId);
+      setNewCatOpen(false);
+      setNewCatEmoji("");
+      setNewCatLabel("");
       const t = setTimeout(() => amountRef.current?.focus(), 250);
       return () => clearTimeout(t);
     }
   }, [open, defaultAccountId]);
 
-  const visibleCategories = useMemo(() => categoriesFor(type), [type]);
+  // `customCategories` in deps so the list refreshes when one is created.
+  const visibleCategories = useMemo(
+    () => categoriesFor(type),
+    [type, customCategories]
+  );
+
+  const createCat = () => {
+    const created = onAddCategory({
+      label: newCatLabel,
+      emoji: newCatEmoji,
+      type,
+    });
+    if (created) {
+      setCategory(created.id);
+      setNewCatOpen(false);
+      setNewCatEmoji("");
+      setNewCatLabel("");
+    }
+  };
 
   // Auto-clear category when switching types
   useEffect(() => {
@@ -171,8 +205,58 @@ export function AddTransactionSheet({
                 <span>{c.label}</span>
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setNewCatOpen((v) => !v)}
+              aria-expanded={newCatOpen}
+              className={`flex shrink-0 items-center gap-1.5 rounded-full border border-dashed px-3 py-2 text-sm font-medium transition ${
+                newCatOpen
+                  ? "border-accent text-accent"
+                  : "border-muted-soft/50 text-muted"
+              }`}
+            >
+              <Plus className="h-4 w-4" />
+              Nova
+            </button>
           </div>
         </div>
+
+        {/* Inline new-category form */}
+        {newCatOpen && (
+          <div className="flex items-center gap-2 rounded-2xl bg-canvas-soft/40 p-2">
+            <input
+              type="text"
+              value={newCatEmoji}
+              onChange={(e) => setNewCatEmoji(e.target.value.slice(0, 2))}
+              placeholder="🙂"
+              aria-label="Emoji da categoria"
+              className="w-12 rounded-xl bg-canvas px-2 py-2 text-center text-lg outline-none ring-2 ring-transparent focus:ring-accent"
+            />
+            <input
+              type="text"
+              value={newCatLabel}
+              onChange={(e) => setNewCatLabel(e.target.value.slice(0, 24))}
+              placeholder={`Nome (${type === "expense" ? "saída" : "entrada"})`}
+              aria-label="Nome da categoria"
+              autoCapitalize="words"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  createCat();
+                }
+              }}
+              className="min-w-0 flex-1 rounded-xl bg-canvas px-3 py-2 text-sm text-ink outline-none ring-2 ring-transparent focus:ring-accent"
+            />
+            <button
+              type="button"
+              onClick={createCat}
+              disabled={!newCatLabel.trim() || !newCatEmoji.trim()}
+              className="shrink-0 rounded-xl bg-elevated px-3 py-2 text-sm font-medium text-on-elevated transition active:scale-95 disabled:opacity-40"
+            >
+              Criar
+            </button>
+          </div>
+        )}
 
         {/* Date + note */}
         <div className="grid grid-cols-2 gap-2">

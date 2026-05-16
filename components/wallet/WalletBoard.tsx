@@ -27,10 +27,12 @@ export function WalletBoard() {
   const {
     accounts,
     transactions,
+    customCategories,
     hydrated,
     addAccount,
     addTransaction,
     removeTransaction,
+    addCategory,
   } = useWallet();
   const [addTxOpen, setAddTxOpen] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
@@ -135,6 +137,8 @@ export function WalletBoard() {
           open={addTxOpen}
           onClose={() => setAddTxOpen(false)}
           onAdd={addTransaction}
+          onAddCategory={addCategory}
+          customCategories={customCategories}
           accounts={accounts}
           defaultAccountId={defaultAccountId}
         />
@@ -250,6 +254,8 @@ export function WalletBoard() {
         open={addTxOpen}
         onClose={() => setAddTxOpen(false)}
         onAdd={addTransaction}
+        onAddCategory={addCategory}
+        customCategories={customCategories}
         accounts={accounts}
         defaultAccountId={defaultAccountId}
       />
