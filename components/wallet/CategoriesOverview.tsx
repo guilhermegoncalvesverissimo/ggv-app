@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { PieChart } from "lucide-react";
+import { Sheet } from "@/components/ui/Sheet";
 import { categoryById } from "@/lib/wallet/categories";
-import { formatCents } from "@/lib/wallet/format";
+import { formatCents, formatDateRelative } from "@/lib/wallet/format";
 import type { Transaction, TxType } from "@/lib/wallet/types";
 
 /** Distinct, non-purple palette for the donut segments + category bubbles. */
@@ -38,6 +39,8 @@ export function CategoriesOverview({
 }) {
   const [mode, setMode] = useState<TxType>("expense");
   const [unit, setUnit] = useState<"pct" | "eur">("pct");
+  const [showAll, setShowAll] = useState(false);
+  const [openCat, setOpenCat] = useState<Slice | null>(null);
 
   const { slices, total } = useMemo(() => {
     const sums = new Map<string, number>();
@@ -70,7 +73,19 @@ export function CategoriesOverview({
     return arc;
   });
 
-  const rows = slices.slice(0, MAX_ROWS);
+  const rows = showAll ? slices : slices.slice(0, MAX_ROWS);
+
+  // Transactions for the open category, newest first.
+  const catTxs = useMemo(() => {
+    if (!openCat) return [];
+    return transactions
+      .filter((t) => t.type === mode && t.category === openCat.category)
+      .sort(
+        (a, b) =>
+          (b.date > a.date ? 1 : b.date < a.date ? -1 : 0) ||
+          b.createdAt - a.createdAt
+      );
+  }, [openCat, transactions, mode]);
 
   return (
     <section className="card p-5">
@@ -83,7 +98,10 @@ export function CategoriesOverview({
             <button
               key={t}
               type="button"
-              onClick={() => setMode(t)}
+              onClick={() => {
+                setMode(t);
+                setShowAll(false);
+              }}
               aria-pressed={mode === t}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                 mode === t
@@ -157,32 +175,46 @@ export function CategoriesOverview({
             </text>
           </svg>
 
-          {/* Legend */}
-          <ul className="min-w-0 flex-1 space-y-2.5">
+          {/* Legend — each row opens its transactions */}
+          <ul className="min-w-0 flex-1 space-y-1">
             {rows.map((s) => (
-              <li key={s.category} className="flex items-center gap-2.5">
-                <span
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
-                  style={{ background: s.color }}
+              <li key={s.category}>
+                <button
+                  type="button"
+                  onClick={() => setOpenCat(s)}
+                  className="-mx-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-xl px-2 py-1.5 text-left transition active:scale-[0.98] hover:bg-canvas-soft/60"
                 >
-                  {s.emoji}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-sm text-ink">
-                  {s.label}
-                </span>
-                <span
-                  className="shrink-0 text-sm font-semibold tabular-nums"
-                  style={{ color: s.color }}
-                >
-                  {unit === "pct"
-                    ? `${s.pct.toFixed(1)}%`
-                    : formatCents(s.cents)}
-                </span>
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs"
+                    style={{ background: s.color }}
+                  >
+                    {s.emoji}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm text-ink">
+                    {s.label}
+                  </span>
+                  <span
+                    className="shrink-0 text-sm font-semibold tabular-nums"
+                    style={{ color: s.color }}
+                  >
+                    {unit === "pct"
+                      ? `${s.pct.toFixed(1)}%`
+                      : formatCents(s.cents)}
+                  </span>
+                </button>
               </li>
             ))}
             {slices.length > MAX_ROWS && (
-              <li className="pl-9 text-xs text-muted">
-                +{slices.length - MAX_ROWS} outras
+              <li>
+                <button
+                  type="button"
+                  onClick={() => setShowAll((v) => !v)}
+                  className="pl-9 text-xs font-medium text-muted transition hover:text-ink"
+                >
+                  {showAll
+                    ? "Ver menos"
+                    : `+${slices.length - MAX_ROWS} outras`}
+                </button>
               </li>
             )}
           </ul>
@@ -208,6 +240,76 @@ export function CategoriesOverview({
           </div>
         </div>
       )}
+
+      {/* Per-category transaction breakdown */}
+      <Sheet open={!!openCat} onClose={() => setOpenCat(null)}>
+        {openCat && (
+          <>
+            <div className="flex items-center gap-3 px-1 pb-1">
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg"
+                style={{ background: openCat.color }}
+              >
+                {openCat.emoji}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="truncate text-lg font-semibold tracking-tight">
+                  {openCat.label}
+                </h2>
+                <p className="text-xs text-muted">
+                  {catTxs.length}{" "}
+                  {catTxs.length === 1 ? "transação" : "transações"} ·{" "}
+                  {((openCat.cents / (total || 1)) * 100).toFixed(1)}% do total
+                </p>
+              </div>
+              <span
+                className="shrink-0 text-lg font-semibold tabular-nums"
+                style={{ color: openCat.color }}
+              >
+                {formatCents(openCat.cents)}
+              </span>
+            </div>
+
+            <ul className="app-scroll mt-2 max-h-[55vh] divide-y divide-canvas-soft/60 overflow-y-auto">
+              {catTxs.map((t) => (
+                <li
+                  key={t.id}
+                  className="flex items-center gap-3 py-2.5"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-ink">
+                      {formatDateRelative(t.date)}
+                    </div>
+                    {t.note && (
+                      <div className="truncate text-xs text-muted">
+                        {t.note}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className={`shrink-0 text-sm font-semibold tabular-nums ${
+                      mode === "income" ? "text-success" : "text-ink"
+                    }`}
+                  >
+                    {formatCents(
+                      mode === "income" ? t.amountCents : -t.amountCents,
+                      { signed: true }
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              type="button"
+              onClick={() => setOpenCat(null)}
+              className="mt-3 w-full rounded-full bg-canvas-soft px-4 py-3 text-sm font-medium text-ink transition active:scale-[0.98]"
+            >
+              Fechar
+            </button>
+          </>
+        )}
+      </Sheet>
     </section>
   );
 }
