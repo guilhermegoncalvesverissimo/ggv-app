@@ -58,6 +58,17 @@ export async function GET() {
       sb.from("accounts").select("*").order("created_at", { ascending: true }),
       sb.from("transactions").select("*"),
     ]);
+  // Tables not created yet → degrade gracefully so the UI shows its empty
+  // state instead of a console full of 500s.
+  const tableMissing = (msg?: string) =>
+    !!msg && /could not find the table|does not exist/i.test(msg);
+  if (tableMissing(aErr?.message) || tableMissing(tErr?.message)) {
+    return NextResponse.json({
+      accounts: [],
+      transactions: [],
+      note: "storage_not_configured",
+    });
+  }
   if (aErr) return NextResponse.json({ error: aErr.message }, { status: 500 });
   if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
   return NextResponse.json({
