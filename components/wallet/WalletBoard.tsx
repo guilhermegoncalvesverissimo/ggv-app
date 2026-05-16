@@ -156,13 +156,15 @@ export function WalletBoard() {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-2">
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <AccountPickerPill
+            accounts={accounts}
+            selected={accountFilter}
+            onOpen={() => setAccountSheetOpen(true)}
+          />
+        </div>
         <PeriodChips value={period} onChange={setPeriod} />
-        <AccountPickerPill
-          accounts={accounts}
-          selected={accountFilter}
-          onOpen={() => setAccountSheetOpen(true)}
-        />
       </div>
 
       {/* Hero: net balance */}
