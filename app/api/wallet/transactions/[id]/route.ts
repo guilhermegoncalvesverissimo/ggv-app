@@ -16,7 +16,7 @@ export async function DELETE(
       { status: 503 }
     );
   }
-  const { error } = await sb.from("transactions").delete().eq("id", id);
+  const { error } = await sb.from("ggv_transactions").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

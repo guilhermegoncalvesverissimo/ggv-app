@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   const { data, error } = await sb
-    .from("accounts")
+    .from("ggv_accounts")
     .insert({
       name,
       color,

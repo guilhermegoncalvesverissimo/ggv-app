@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const { data, error } = await sb
-    .from("transactions")
+    .from("ggv_transactions")
     .insert({
       account_id: body.accountId,
       type: body.type,

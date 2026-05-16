@@ -55,8 +55,8 @@ export async function GET() {
   }
   const [{ data: acc, error: aErr }, { data: tx, error: tErr }] =
     await Promise.all([
-      sb.from("accounts").select("*").order("created_at", { ascending: true }),
-      sb.from("transactions").select("*"),
+      sb.from("ggv_accounts").select("*").order("created_at", { ascending: true }),
+      sb.from("ggv_transactions").select("*"),
     ]);
   // Tables not created yet → degrade gracefully so the UI shows its empty
   // state instead of a console full of 500s.

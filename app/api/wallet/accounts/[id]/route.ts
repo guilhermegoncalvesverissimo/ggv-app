@@ -40,7 +40,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
   }
 
-  const { error } = await sb.from("accounts").update(patch).eq("id", id);
+  const { error } = await sb.from("ggv_accounts").update(patch).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
@@ -58,7 +58,7 @@ export async function DELETE(
     );
   }
   // Cascades transactions via the FK.
-  const { error } = await sb.from("accounts").delete().eq("id", id);
+  const { error } = await sb.from("ggv_accounts").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
