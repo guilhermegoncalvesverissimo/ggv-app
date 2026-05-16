@@ -75,7 +75,7 @@ export function AddPersonSheet({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Ex.: Boris Cherny"
-            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
           />
         </label>
 
@@ -88,7 +88,7 @@ export function AddPersonSheet({
             value={badge}
             onChange={(e) => setBadge(e.target.value.slice(0, 4))}
             placeholder="Ex.: 🚀 ou 💼"
-            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
           />
         </label>
 

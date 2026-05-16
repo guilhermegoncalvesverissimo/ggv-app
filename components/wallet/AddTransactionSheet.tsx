@@ -268,7 +268,7 @@ export function AddTransactionSheet({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </label>
           <label className="block">
@@ -280,7 +280,7 @@ export function AddTransactionSheet({
               value={note}
               onChange={(e) => setNote(e.target.value.slice(0, 80))}
               placeholder="Opcional"
-              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </label>
         </div>

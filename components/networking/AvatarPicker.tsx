@@ -73,7 +73,7 @@ export function AvatarPicker({
         )}
 
         {/* Camera overlay hint */}
-        <span className="pointer-events-none absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-elevated text-white shadow-md ring-2 ring-white">
+        <span className="pointer-events-none absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-elevated text-on-elevated shadow-md ring-2 ring-card-bg">
           <Camera className="h-3.5 w-3.5" strokeWidth={2.25} />
         </span>
       </button>
@@ -83,7 +83,7 @@ export function AvatarPicker({
           type="button"
           onClick={() => onChange(undefined)}
           aria-label="Remover foto"
-          className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-ink shadow-md ring-2 ring-white"
+          className="absolute -top-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-white text-[#0e0e10] shadow-md ring-2 ring-card-bg"
         >
           <X className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>

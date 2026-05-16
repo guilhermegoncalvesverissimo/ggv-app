@@ -156,15 +156,15 @@ export function SwipeableTxRow({
             ? "none"
             : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
-        className="flex select-none items-center gap-3 bg-white px-5 py-3"
+        className="flex select-none items-center gap-3 bg-card-bg px-5 py-3"
       >
         <div className="relative h-10 w-10 shrink-0">
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-canvas-soft/50 text-lg">
+          <div className="flex h-full w-full items-center justify-center rounded-full bg-canvas-soft text-lg">
             {cat?.emoji ?? "❓"}
           </div>
           {showAccountBadge && account && (
             <span
-              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white"
+              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-card-bg"
               style={{ background: account.color }}
               aria-label={`Conta: ${account.name}`}
             />

@@ -30,7 +30,7 @@ export function TagsInput({
   };
 
   return (
-    <div className="mt-1 rounded-2xl bg-canvas-soft/40 px-3 py-2 ring-2 ring-transparent transition focus-within:bg-white focus-within:ring-accent">
+    <div className="mt-1 rounded-2xl bg-canvas-soft/40 px-3 py-2 ring-2 ring-transparent transition focus-within:bg-card-bg focus-within:ring-accent">
       <div className="flex flex-wrap items-center gap-1.5">
         {value.map((t) => (
           <span

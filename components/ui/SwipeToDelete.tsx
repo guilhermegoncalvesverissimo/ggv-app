@@ -156,7 +156,7 @@ export function SwipeToDelete({
             ? "none"
             : "transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)",
         }}
-        className={`select-none bg-white ${contentClassName}`}
+        className={`select-none bg-card-bg ${contentClassName}`}
       >
         {children}
       </div>

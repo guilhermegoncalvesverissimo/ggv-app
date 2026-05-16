@@ -112,7 +112,7 @@ export function ProjectFormSheet({
               value={emoji}
               onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
               placeholder="🚀"
-              className="mt-1 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+              className="mt-1 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </label>
           <label className="block">
@@ -126,7 +126,7 @@ export function ProjectFormSheet({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex.: GGV App"
-              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </label>
         </div>
@@ -140,7 +140,7 @@ export function ProjectFormSheet({
             onChange={(e) => setDescription(e.target.value.slice(0, 280))}
             placeholder="Em que consiste? (opcional)"
             rows={2}
-            className="mt-1 w-full resize-none rounded-2xl bg-canvas-soft/40 px-4 py-3 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+            className="mt-1 w-full resize-none rounded-2xl bg-canvas-soft/40 px-4 py-3 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
           />
         </label>
 
@@ -156,7 +156,7 @@ export function ProjectFormSheet({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://..."
-            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-white focus:ring-accent"
+            className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
           />
         </label>
 
