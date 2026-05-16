@@ -13,6 +13,7 @@ import {
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { PeriodChips } from "./PeriodChips";
 import { Sparkline } from "./Sparkline";
+import { CategoriesOverview } from "./CategoriesOverview";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
@@ -197,6 +198,8 @@ export function WalletBoard() {
           </div>
         </div>
       </section>
+
+      <CategoriesOverview transactions={filtered} />
 
       {/* Transaction list */}
       <section className="card overflow-hidden">
