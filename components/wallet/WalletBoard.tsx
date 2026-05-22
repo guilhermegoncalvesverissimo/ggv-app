@@ -16,6 +16,7 @@ import { PeriodSelector } from "./PeriodSelector";
 import { Sparkline } from "./Sparkline";
 import { CategoriesOverview } from "./CategoriesOverview";
 import { BudgetsCard } from "./BudgetsCard";
+import { CashHuntersCard } from "@/components/cashhunters/CashHuntersCard";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
@@ -210,6 +211,8 @@ export function WalletBoard() {
       </section>
 
       <BudgetsCard transactions={transactions} budgets={budgets} />
+
+      <CashHuntersCard />
 
       <CategoriesOverview
         transactions={filtered}
