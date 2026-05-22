@@ -41,7 +41,7 @@ export function CashHuntersCard() {
         <img
           src="/cashhunters-logo.png"
           alt=""
-          className="h-10 w-10 shrink-0 object-contain"
+          className="h-12 w-12 shrink-0 object-contain"
         />
         <h2 className="flex-1 text-sm font-semibold tracking-tight">
           CashHunters
