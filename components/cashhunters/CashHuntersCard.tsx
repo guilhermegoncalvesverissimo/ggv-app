@@ -37,14 +37,12 @@ export function CashHuntersCard() {
       className="card block p-5 transition active:scale-[0.99]"
     >
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-canvas-soft">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/cashhunters-logo.png"
-            alt=""
-            className="h-full w-full object-contain"
-          />
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/cashhunters-logo.png"
+          alt=""
+          className="h-10 w-10 shrink-0 object-contain"
+        />
         <h2 className="flex-1 text-sm font-semibold tracking-tight">
           CashHunters
         </h2>
