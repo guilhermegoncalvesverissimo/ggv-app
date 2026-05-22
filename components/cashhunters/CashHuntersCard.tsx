@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, Target } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useCashHunters } from "@/lib/cashhunters/useCashHunters";
 import { formatCents } from "@/lib/wallet/format";
 
@@ -23,8 +23,13 @@ export function CashHuntersCard() {
       className="card block p-5 transition active:scale-[0.99]"
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-canvas-soft">
-          <Target className="h-4 w-4 text-ink" strokeWidth={2.25} />
+        <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-canvas-soft">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/cashhunters-logo.png"
+            alt=""
+            className="h-full w-full object-contain"
+          />
         </div>
         <h2 className="flex-1 text-sm font-semibold tracking-tight">
           CashHunters
