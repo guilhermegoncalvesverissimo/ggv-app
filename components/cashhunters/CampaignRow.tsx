@@ -1,8 +1,9 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
-import { faviconFor, shortHost } from "@/lib/cashhunters/favicon";
+import { shortHost } from "@/lib/cashhunters/favicon";
 import type { Campaign } from "@/lib/cashhunters/types";
+import { CampaignAvatar } from "./CampaignAvatar";
 
 export function CampaignRow({
   campaign,
@@ -11,8 +12,6 @@ export function CampaignRow({
   campaign: Campaign;
   onOpen: () => void;
 }) {
-  const favicon = faviconFor(campaign.url, 64);
-  const initial = campaign.name.charAt(0).toUpperCase();
   const done = campaign.steps.filter((s) => s.done).length;
   const total = campaign.steps.length;
   const completed = total > 0 && done === total;
@@ -24,26 +23,7 @@ export function CampaignRow({
       onClick={onOpen}
       className="card flex w-full items-center gap-3 p-4 text-left transition active:scale-[0.99]"
     >
-      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-canvas-soft">
-        {favicon ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={favicon}
-            alt=""
-            className="h-full w-full object-cover"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
-          />
-        ) : null}
-        <span
-          className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm font-semibold text-muted"
-          aria-hidden
-        >
-          {initial}
-        </span>
-      </div>
+      <CampaignAvatar name={campaign.name} url={campaign.url} />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

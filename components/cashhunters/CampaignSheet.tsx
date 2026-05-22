@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
-import { faviconFor } from "@/lib/cashhunters/favicon";
+import { CampaignAvatar } from "./CampaignAvatar";
 import { formatCents, parseAmountToCents } from "@/lib/wallet/format";
 import type { Campaign, CampaignInput, Step } from "@/lib/cashhunters/types";
 
@@ -115,8 +115,6 @@ export function CampaignSheet({
     onClose();
   };
 
-  const favicon = faviconFor(url || editing?.url, 96);
-  const initial = (name || editing?.name || "?").charAt(0).toUpperCase();
   const completed = steps.length > 0 && steps.every((s) => s.done);
   const doneCount = steps.filter((s) => s.done).length;
 
@@ -124,26 +122,12 @@ export function CampaignSheet({
     <Sheet open={open} onClose={onClose}>
       {/* Header: logo + name */}
       <div className="flex items-center gap-3 pb-1">
-        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-canvas-soft">
-          {favicon ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={favicon}
-              alt=""
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-          ) : null}
-          <span
-            className="pointer-events-none absolute inset-0 flex items-center justify-center text-base font-semibold text-muted"
-            aria-hidden
-          >
-            {initial}
-          </span>
-        </div>
+        <CampaignAvatar
+          name={name || editing?.name || "?"}
+          url={url || editing?.url}
+          size="h-12 w-12"
+          textSize="text-base"
+        />
         <input
           ref={nameRef}
           type="text"
