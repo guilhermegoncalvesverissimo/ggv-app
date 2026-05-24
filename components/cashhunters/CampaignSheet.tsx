@@ -5,7 +5,32 @@ import { Check, Plus, Trash2, X } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { CampaignAvatar } from "./CampaignAvatar";
 import { formatCents, parseAmountToCents } from "@/lib/wallet/format";
-import type { Campaign, CampaignInput, Step } from "@/lib/cashhunters/types";
+import type {
+  Campaign,
+  CampaignInput,
+  Kind,
+  Step,
+} from "@/lib/cashhunters/types";
+
+type CopyKey = "newTitle" | "editTitle" | "remove" | "removeConfirm" | "urlPlaceholder" | "targetLabel";
+const COPY: Record<Kind, Record<CopyKey, string>> = {
+  campaign: {
+    newTitle: "Nova campanha",
+    editTitle: "Editar campanha",
+    remove: "Remover",
+    removeConfirm: "Apagar campanha",
+    urlPlaceholder: "https://postmarkapp.com",
+    targetLabel: "Objetivo de ganho",
+  },
+  card: {
+    newTitle: "Novo cartão",
+    editTitle: "Editar cartão",
+    remove: "Remover",
+    removeConfirm: "Apagar cartão",
+    urlPlaceholder: "https://bankinter.pt",
+    targetLabel: "Valor de referência",
+  },
+};
 
 function stepId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -18,6 +43,7 @@ export function CampaignSheet({
   open,
   onClose,
   editing,
+  kind,
   onCreate,
   onUpdate,
   onDelete,
@@ -26,10 +52,14 @@ export function CampaignSheet({
   onClose: () => void;
   /** Null in "create" mode; the campaign being edited otherwise. */
   editing: Campaign | null;
-  onCreate: (input: CampaignInput) => Campaign;
+  /** Which flavour of item this sheet is editing/creating. */
+  kind: Kind;
+  /** Receives the input WITHOUT kind — parent stamps it. */
+  onCreate: (input: Omit<CampaignInput, "kind">) => Campaign;
   onUpdate: (id: string, patch: Partial<CampaignInput>) => void;
   onDelete: (id: string) => void;
 }) {
+  const copy = COPY[kind];
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [target, setTarget] = useState("");
@@ -153,14 +183,14 @@ export function CampaignSheet({
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onBlur={saveUrl}
-            placeholder="https://postmarkapp.com"
+            placeholder={copy.urlPlaceholder}
             className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
           />
         </label>
 
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-muted">
-            Objetivo de ganho
+            {copy.targetLabel}
           </span>
           <div className="mt-1 flex items-center gap-2 rounded-2xl bg-canvas-soft/40 px-4 py-3 ring-2 ring-transparent transition focus-within:bg-card-bg focus-within:ring-accent">
             <span className="text-sm text-muted">€</span>
@@ -265,9 +295,14 @@ export function CampaignSheet({
       {/* Footer */}
       {editing ? (
         <div className="pt-4">
-          {completed && cleanTarget > 0 && (
+          {completed && cleanTarget > 0 && kind === "campaign" && (
             <div className="mb-3 rounded-2xl bg-success/10 px-4 py-2.5 text-center text-sm font-medium text-success">
               Campanha completa — {formatCents(editing.targetCents)} ganhos 🎉
+            </div>
+          )}
+          {completed && kind === "card" && (
+            <div className="mb-3 rounded-2xl bg-success/10 px-4 py-2.5 text-center text-sm font-medium text-success">
+              Esquema do cartão completo 🎉
             </div>
           )}
           {confirmDelete ? (
@@ -287,7 +322,7 @@ export function CampaignSheet({
                 }}
                 className="flex-1 rounded-full bg-danger px-4 py-2.5 text-sm font-medium text-white"
               >
-                Apagar campanha
+                {copy.removeConfirm}
               </button>
             </div>
           ) : (

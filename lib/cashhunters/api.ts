@@ -29,9 +29,17 @@ async function api<T>(
   return (await r.json()) as T;
 }
 
-export async function fetchCampaigns(): Promise<Campaign[]> {
-  const j = await api<{ campaigns: Campaign[] }>("/api/cashhunters");
-  return j.campaigns;
+export async function fetchCampaigns(): Promise<{
+  campaigns: Campaign[];
+  cards: Campaign[];
+}> {
+  const j = await api<{ campaigns?: Campaign[]; cards?: Campaign[] }>(
+    "/api/cashhunters"
+  );
+  return {
+    campaigns: j.campaigns ?? [],
+    cards: j.cards ?? [],
+  };
 }
 
 export async function createCampaign(

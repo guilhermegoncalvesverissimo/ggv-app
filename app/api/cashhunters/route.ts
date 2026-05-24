@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/news/supabase";
-import type { Campaign, Step } from "@/lib/cashhunters/types";
+import type { Campaign, Kind, Step } from "@/lib/cashhunters/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Row = {
   id: string;
+  kind: Kind | null;
   name: string;
   url: string | null;
   target_cents: number;
@@ -18,6 +19,7 @@ type Row = {
 function toCampaign(r: Row): Campaign {
   return {
     id: r.id,
+    kind: r.kind === "card" ? "card" : "campaign",
     name: r.name,
     url: r.url ?? undefined,
     targetCents: r.target_cents,
@@ -46,12 +48,16 @@ export async function GET() {
   if (tableMissing(error?.message)) {
     return NextResponse.json({
       campaigns: [],
+      cards: [],
       note: "storage_not_configured",
     });
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const all = ((data ?? []) as Row[]).map(toCampaign);
   return NextResponse.json({
-    campaigns: ((data ?? []) as Row[]).map(toCampaign),
+    campaigns: all.filter((c) => c.kind === "campaign"),
+    cards: all.filter((c) => c.kind === "card"),
   });
 }
 
@@ -76,6 +82,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing name" }, { status: 400 });
   }
 
+  const kind: Kind = body.kind === "card" ? "card" : "campaign";
   const target =
     typeof body.targetCents === "number" && Number.isFinite(body.targetCents)
       ? Math.max(0, Math.round(body.targetCents))
@@ -84,6 +91,7 @@ export async function POST(req: Request) {
   const { data, error } = await sb
     .from("ggv_cashhunters")
     .insert({
+      kind,
       name,
       url: body.url?.trim() || null,
       target_cents: target,
