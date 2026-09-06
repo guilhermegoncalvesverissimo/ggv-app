@@ -69,11 +69,13 @@ export function WalletTiles({
   expenseCents,
   incomeCents,
   budgetCount,
+  txCount,
   period,
 }: {
   expenseCents: number;
   incomeCents: number;
   budgetCount: number;
+  txCount: number;
   period: Period;
 }) {
   const { campaigns, hydrated } = useCashHunters();
@@ -137,6 +139,20 @@ export function WalletTiles({
               {budgetCount}
             </div>
             <div className="text-sm font-bold">Orçamentos</div>
+          </Tile>
+
+          {/* Onde vive a lista, o saldo e o botão de adicionar. */}
+          <Tile
+            href="/finance/transacoes"
+            bg={BLUE_SOFT}
+            fg={INK}
+            width={W_HALF}
+            className="justify-between"
+          >
+            <div className="text-3xl font-bold leading-none tracking-tight tabular-nums">
+              {txCount}
+            </div>
+            <div className="text-sm font-bold">Transações</div>
           </Tile>
         </div>
 
