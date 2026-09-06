@@ -109,7 +109,12 @@ export function WalletBoard() {
 
         {/* Tiles show even with no transactions — CashHunters and Salário
             don't depend on the wallet having data yet. */}
-        <WalletTiles expenseCents={0} period={period} />
+        <WalletTiles
+          expenseCents={0}
+          incomeCents={0}
+          budgetCount={budgets.length}
+          period={period}
+        />
 
         <section className="card p-6">
           <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-muted">
@@ -175,7 +180,12 @@ export function WalletBoard() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
-      <WalletTiles expenseCents={stats.expense} period={period} />
+      <WalletTiles
+        expenseCents={stats.expense}
+        incomeCents={stats.income}
+        budgetCount={budgets.length}
+        period={period}
+      />
 
       {/* Hero: net balance */}
       <section className="card p-6">

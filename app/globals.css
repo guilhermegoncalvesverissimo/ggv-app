@@ -147,3 +147,17 @@ body[data-sheet-open="true"] .bottom-nav-pill {
   opacity: 0;
   pointer-events: none;
 }
+
+/* Horizontal tile carousel (wallet). Full-bleed: the rail escapes the page's
+   px-5 with a negative margin and re-applies it inside, so the first card sits
+   inset while the next one peeks past the edge — the framing the design
+   reference has. Scrollbar hidden like .app-scroll. */
+.tile-rail {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.tile-rail::-webkit-scrollbar {
+  display: none;
+}
