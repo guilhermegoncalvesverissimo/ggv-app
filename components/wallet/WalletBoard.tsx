@@ -18,21 +18,18 @@ export function WalletBoard() {
   const { transactions, budgets, hydrated } = useWallet();
   const [period] = useState<Period>(() => currentMonth());
 
-  const stats = useMemo(() => {
-    let income = 0;
-    let expense = 0;
+  const expense = useMemo(() => {
+    let sum = 0;
     for (const t of transactions) {
       if (!isInPeriod(t.date, period)) continue;
-      if (t.type === "income") income += t.amountCents;
-      else expense += t.amountCents;
+      if (t.type === "expense") sum += t.amountCents;
     }
-    return { income, expense };
+    return sum;
   }, [transactions, period]);
 
   return (
     <WalletTiles
-      expenseCents={hydrated ? stats.expense : 0}
-      incomeCents={hydrated ? stats.income : 0}
+      expenseCents={hydrated ? expense : 0}
       budgetCount={budgets.length}
       txCount={transactions.length}
       period={period}
