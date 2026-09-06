@@ -1,23 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { useCashHunters } from "@/lib/cashhunters/useCashHunters";
 import { formatCents } from "@/lib/wallet/format";
+import { periodLabel, type Period } from "@/lib/wallet/period";
 
 /**
- * Bento tiles at the top of the wallet, in the Go & Grow style the user asked
- * for: chunky rounded cards, flat saturated fills, one huge figure per tile.
+ * Bento tiles at the top of the wallet, laid out like the Go & Grow reference:
  *
- * The palette is deliberately fixed rather than themed. These tiles are solid
- * blocks that carry their own contrast, the same way the bottom nav pill stays
- * dark in both themes — letting them follow the light/dark tokens would wash
- * the whole effect out.
+ *   row 1 ─ wide title card + narrow stat card   (2.15 : 1, measured off the print)
+ *   row 2 ─ two equal stat cards
+ *
+ * Both rows share one height, so the block reads as a single slab.
+ *
+ * The palette is deliberately fixed rather than themed. These are solid blocks
+ * that carry their own contrast, the same way the bottom nav pill stays dark in
+ * both themes — letting them follow the light/dark tokens would wash the whole
+ * effect out.
  */
 const LIME = "#c6f432";
+const LIME_SOFT = "#dcf7a0";
 const BLUE = "#1e7fd0";
 const BLUE_SOFT = "#a5cfec";
 const INK = "#0e0e10";
+
+const H = "min-h-[8.75rem]"; // ≈138pt, the card height in the reference
 
 function Tile({
   href,
@@ -36,72 +43,99 @@ function Tile({
     <Link
       href={href}
       style={{ backgroundColor: bg, color: fg }}
-      className={`relative flex flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 transition active:scale-[0.98] ${className}`}
+      className={`flex flex-col overflow-hidden rounded-[1.75rem] p-4 transition active:scale-[0.98] ${H} ${className}`}
     >
       {children}
     </Link>
   );
 }
 
-export function WalletTiles({ expenseCents }: { expenseCents: number }) {
+export function WalletTiles({
+  expenseCents,
+  period,
+}: {
+  expenseCents: number;
+  period: Period;
+}) {
   const { campaigns, hydrated } = useCashHunters();
 
   const active = campaigns.filter(
     (c) => c.steps.length === 0 || !c.steps.every((s) => s.done)
   );
-  const pending = active.reduce((s, c) => s + c.targetCents, 0);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {/* CashHunters — spans the row: it is the tile with real content. */}
-      <Tile href="/finance/cashhunters" bg={BLUE} fg="#ffffff" className="col-span-2 min-h-[9.5rem]">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {/* The mark is blue-on-white, so it sits in a white badge — the same
-                way the Go & Grow logo is a rounded badge in the reference. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/cashhunters-mark.jpg"
-              alt=""
-              className="h-11 w-11 shrink-0 rounded-2xl bg-white object-contain p-1"
-            />
-            <span className="text-xl font-bold tracking-tight">CashHunters</span>
+    <div className="flex flex-col gap-3">
+      {/* Row 1 — wide title card + narrow stat card */}
+      <div className="flex gap-3">
+        {/* Title card, the slot the reference uses for the headline. */}
+        <div
+          style={{ backgroundColor: LIME, color: INK }}
+          className={`flex flex-[2.15] flex-col justify-center rounded-[1.75rem] p-5 ${H}`}
+        >
+          <div className="text-[1.75rem] font-bold leading-[1.05] tracking-tight">
+            A minha
+            <br />
+            Wallet
           </div>
-          <ArrowUpRight className="h-5 w-5 shrink-0 opacity-70" strokeWidth={2.5} />
+          <div className="mt-2 text-sm font-bold opacity-70">
+            {periodLabel(period)}
+          </div>
         </div>
 
-        <div className="mt-4">
-          <div className="text-5xl font-bold leading-none tracking-tight tabular-nums">
+        {/* CashHunters — centred, like the "9" card in the reference. */}
+        <Tile
+          href="/finance/cashhunters"
+          bg={BLUE}
+          fg="#ffffff"
+          className="flex-1 items-center justify-center text-center"
+        >
+          {/* The mark is blue-on-white, so it sits in a white badge — the same
+              treatment the logo gets in the reference. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/cashhunters-mark.jpg"
+            alt=""
+            className="h-8 w-8 rounded-xl bg-white object-contain p-0.5"
+          />
+          <div className="mt-1 text-4xl font-bold leading-none tracking-tight tabular-nums">
             {hydrated ? active.length : "—"}
           </div>
-          <div className="mt-1.5 text-sm font-bold">
-            {active.length === 1 ? "campanha ativa" : "campanhas ativas"}
+          <div className="mt-1 text-[11px] font-bold leading-tight">
+            CashHunters
           </div>
-          {hydrated && pending > 0 && (
-            <span className="mt-2 inline-flex rounded-full bg-white/20 px-2.5 py-1 text-xs font-bold">
-              {formatCents(pending)} por resgatar
+        </Tile>
+      </div>
+
+      {/* Row 2 — two equal cards */}
+      <div className="flex gap-3">
+        <Tile
+          href="/finance/salario"
+          bg={LIME_SOFT}
+          fg={INK}
+          className="flex-1 justify-between"
+        >
+          <div className="text-3xl font-bold leading-none tracking-tight">
+            Salário
+          </div>
+          <div>
+            <span className="inline-flex whitespace-nowrap rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
+              Em desenvolvimento
             </span>
-          )}
-        </div>
-      </Tile>
+          </div>
+        </Tile>
 
-      {/* Salário — placeholder until the feature exists. */}
-      <Tile href="/finance/salario" bg={LIME} fg={INK} className="min-h-[8.5rem]">
-        <div className="text-3xl font-bold leading-none tracking-tight">Salário</div>
-        <div>
-          <span className="inline-flex whitespace-nowrap rounded-full bg-black/10 px-2.5 py-1 text-[11px] font-bold">
-            Em desenvolvimento
-          </span>
-        </div>
-      </Tile>
-
-      {/* Despesas — the period total, with the breakdown behind it. */}
-      <Tile href="/finance/despesas" bg={BLUE_SOFT} fg={INK} className="min-h-[8.5rem]">
-        <div className="text-3xl font-bold leading-none tracking-tight tabular-nums">
-          {formatCents(expenseCents)}
-        </div>
-        <div className="text-sm font-bold">Despesas</div>
-      </Tile>
+        <Tile
+          href="/finance/despesas"
+          bg={BLUE_SOFT}
+          fg={INK}
+          className="flex-1 justify-between"
+        >
+          <div className="text-3xl font-bold leading-none tracking-tight tabular-nums">
+            {formatCents(expenseCents)}
+          </div>
+          <div className="text-sm font-bold">Despesas</div>
+        </Tile>
+      </div>
     </div>
   );
 }
