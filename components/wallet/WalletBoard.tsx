@@ -14,9 +14,8 @@ import {
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { PeriodSelector } from "./PeriodSelector";
 import { Sparkline } from "./Sparkline";
-import { CategoriesOverview } from "./CategoriesOverview";
 import { BudgetsCard } from "./BudgetsCard";
-import { CashHuntersCard } from "@/components/cashhunters/CashHuntersCard";
+import { WalletTiles } from "./WalletTiles";
 import { AccountSheet } from "./AccountSheet";
 import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
@@ -108,6 +107,10 @@ export function WalletBoard() {
           />
         </div>
 
+        {/* Tiles show even with no transactions — CashHunters and Salário
+            don't depend on the wallet having data yet. */}
+        <WalletTiles expenseCents={0} />
+
         <section className="card p-6">
           <div className="flex items-center gap-3 text-xs uppercase tracking-wide text-muted">
             <Wallet className="h-4 w-4" />
@@ -172,6 +175,8 @@ export function WalletBoard() {
         <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
+      <WalletTiles expenseCents={stats.expense} />
+
       {/* Hero: net balance */}
       <section className="card p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-muted">
@@ -211,13 +216,6 @@ export function WalletBoard() {
       </section>
 
       <BudgetsCard transactions={transactions} budgets={budgets} />
-
-      <CashHuntersCard />
-
-      <CategoriesOverview
-        transactions={filtered}
-        onEditTransaction={setEditingTx}
-      />
 
       {/* Transaction list */}
       <section className="card overflow-hidden">
