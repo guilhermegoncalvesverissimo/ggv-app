@@ -48,6 +48,12 @@ export function Sheet({
     };
   }, [open]);
 
+  // A closed panel is pushed down by its own height *and* made invisible.
+  // In the installed iOS PWA a fixed `inset-0` box can stop short of the
+  // screen's bottom edge (above the home indicator), so translate-y-full
+  // alone leaves the panel's top — grab handle and upward shadow — peeking
+  // out below the nav. Visibility flips at the end of the slide-out (it's in
+  // the transition list), so the closing animation still plays.
   return (
     <div
       aria-hidden={!open}
@@ -64,8 +70,8 @@ export function Sheet({
       <div
         role="dialog"
         aria-modal="true"
-        className={`absolute inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-3xl bg-card-bg px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-12px_40px_-12px_rgba(15,12,41,0.35)] transition-transform duration-300 ${
-          open ? "translate-y-0" : "translate-y-full"
+        className={`absolute inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-3xl bg-card-bg px-5 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)] shadow-[0_-12px_40px_-12px_rgba(15,12,41,0.35)] transition-[transform,visibility] duration-300 ${
+          open ? "visible translate-y-0" : "invisible translate-y-full"
         }`}
       >
         <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-muted/30" />
