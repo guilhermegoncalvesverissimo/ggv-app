@@ -88,6 +88,14 @@ body {
   transition: background-color 200ms ease;
 }
 
+/* Gap between the floating nav pill and the bottom of the screen. Sits
+ * 0.75rem into the home-indicator inset (iOS leaves plenty of room there),
+ * never closer than 0.75rem to the edge. The FABs and the chat input are
+ * positioned from this too, so they move with the nav. */
+:root {
+  --nav-bottom: max(calc(env(safe-area-inset-bottom) - 0.75rem), 0.75rem);
+}
+
 /* Disable native pull-to-refresh inside the installed PWA shell */
 @media (display-mode: standalone) {
   html,

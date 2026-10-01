@@ -39,7 +39,7 @@ export function MessageInput({
   };
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] z-10 mx-auto max-w-[480px] px-5">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--nav-bottom)+5.25rem)] z-10 mx-auto max-w-[480px] px-5">
       <form
         onSubmit={(e) => {
           e.preventDefault();

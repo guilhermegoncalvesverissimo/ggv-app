@@ -112,7 +112,7 @@ export function NetworkingBoard() {
           type="button"
           aria-label="Adicionar pessoa"
           onClick={() => setAddOpen(true)}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-elevated text-white shadow-[0_18px_40px_-12px_rgba(15,12,41,0.55)] transition active:scale-95"
+          className="fixed bottom-[calc(var(--nav-bottom)+5.5rem)] right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-elevated text-white shadow-[0_18px_40px_-12px_rgba(15,12,41,0.55)] transition active:scale-95"
         >
           <Plus className="h-6 w-6" strokeWidth={2.5} />
         </button>
