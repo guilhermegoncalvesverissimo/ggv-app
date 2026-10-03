@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TrendingDown } from "lucide-react";
+import { Plus, TrendingDown } from "lucide-react";
 import { useWallet } from "@/lib/wallet/useWallet";
 import { formatCents } from "@/lib/wallet/format";
 import {
@@ -32,6 +32,7 @@ export function ExpensesBoard() {
     addCategory,
   } = useWallet();
   const [period, setPeriod] = useState<Period>(() => currentMonth());
+  const [addTxOpen, setAddTxOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   const filtered = useMemo(
@@ -82,6 +83,25 @@ export function ExpensesBoard() {
         onEditTransaction={setEditingTx}
       />
 
+      <button
+        type="button"
+        aria-label="Adicionar despesa"
+        onClick={() => setAddTxOpen(true)}
+        className="fixed bottom-[calc(var(--nav-bottom)+5.5rem)] right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-elevated text-white shadow-[0_18px_40px_-12px_rgba(15,12,41,0.55)] transition active:scale-95"
+      >
+        <Plus className="h-6 w-6" strokeWidth={2.5} />
+      </button>
+
+      {/* Opens on "Despesa" by default (the sheet resets to expense). */}
+      <AddTransactionSheet
+        open={addTxOpen}
+        onClose={() => setAddTxOpen(false)}
+        onAdd={addTransaction}
+        onAddCategory={addCategory}
+        customCategories={customCategories}
+        accounts={accounts}
+        defaultAccountId={accounts[0]?.id ?? ""}
+      />
       <AddTransactionSheet
         open={!!editingTx}
         onClose={() => setEditingTx(null)}
