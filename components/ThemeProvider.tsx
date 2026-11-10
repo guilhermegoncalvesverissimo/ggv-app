@@ -44,6 +44,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle("dark", theme === "dark");
+    // A faixa da hora no iPhone segue o theme-color: igual ao fundo da app.
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#0e0e10" : "#ffffff");
     try {
       window.localStorage.setItem(STORAGE_KEY, theme);
     } catch {

@@ -21,19 +21,17 @@ export const metadata: Metadata = {
   applicationName: "GGV",
   appleWebApp: {
     capable: true,
-    // `black-translucent` lets the iOS status bar show the page background
-    // underneath, so it adapts automatically between light and dark themes.
-    statusBarStyle: "black-translucent",
+    // `default`, não `black-translucent`: com a página por baixo da hora,
+    // o iOS recente desenha uma névoa sobre essa zona. A cor da faixa da
+    // hora vem do theme-color, que segue o tema da app (ThemeProvider).
+    statusBarStyle: "default",
     title: "GGV",
   },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0e0e10" },
-  ],
+  themeColor: "#ffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -51,7 +49,11 @@ const THEME_INIT_SCRIPT = `
 try {
   var t = localStorage.getItem('ggv:theme');
   var dark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
-  if (dark) document.documentElement.classList.add('dark');
+  if (dark) {
+    document.documentElement.classList.add('dark');
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', '#0e0e10');
+  }
 } catch (e) {}
 `.trim();
 
