@@ -2,12 +2,14 @@
 
 import { useRef, useState } from "react";
 import { Camera, X } from "lucide-react";
-import { compressAvatar } from "@/lib/networking/avatar";
+import { loadImageFromFile } from "@/lib/networking/avatar";
+import { AvatarCropper } from "./AvatarCropper";
 import { colorFor, initialsOf } from "@/lib/networking/colors";
 
 /**
- * Circular avatar with file-input upload. Tap to pick a photo. When one is
- * set, a small ✕ button removes it. Photos are compressed to a small JPEG
+ * Circular avatar with file-input upload. Tap to pick a photo, then adjust
+ * position/zoom in the cropper (with a live preview of the bubble). When one
+ * is set, a small ✕ button removes it. Photos are compressed to a small JPEG
  * data URL before bubbling up.
  */
 export function AvatarPicker({
@@ -25,6 +27,7 @@ export function AvatarPicker({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<HTMLImageElement | null>(null);
   const color = colorFor(name || "?");
   const initials = initialsOf(name || "?");
 
@@ -32,8 +35,7 @@ export function AvatarPicker({
     if (!file) return;
     setBusy(true);
     try {
-      const dataUrl = await compressAvatar(file);
-      onChange(dataUrl);
+      setEditing(await loadImageFromFile(file));
     } catch {
       // Could surface an error toast — for now, silently keep the previous avatar.
     } finally {
@@ -87,6 +89,17 @@ export function AvatarPicker({
         >
           <X className="h-3.5 w-3.5" strokeWidth={2.5} />
         </button>
+      )}
+
+      {editing && (
+        <AvatarCropper
+          image={editing}
+          onCancel={() => setEditing(null)}
+          onConfirm={(dataUrl) => {
+            setEditing(null);
+            onChange(dataUrl);
+          }}
+        />
       )}
 
       <input

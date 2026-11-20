@@ -1,30 +1,56 @@
+/** Square region of the source image, in natural image pixels. */
+export type CropRect = { sx: number; sy: number; side: number };
+
 /**
  * Resize + JPEG-compress an image File to a small data URL suitable for
- * localStorage (~20-40 KB at 240px square / 80% quality).
+ * localStorage (~20-40 KB at 240px square / 80% quality). Uses a centered
+ * square crop.
  */
 export async function compressAvatar(
   file: File,
   maxDim = 240,
   quality = 0.82
 ): Promise<string> {
-  const dataUrl = await readAsDataUrl(file);
-  const img = await loadImage(dataUrl);
-  const { width, height } = scaleDown(img.width, img.height, maxDim);
+  const img = await loadImageFromFile(file);
+  const side = Math.min(img.naturalWidth, img.naturalHeight);
+  return cropAvatar(
+    img,
+    {
+      sx: (img.naturalWidth - side) / 2,
+      sy: (img.naturalHeight - side) / 2,
+      side,
+    },
+    maxDim,
+    quality
+  );
+}
 
+/**
+ * Draw the given square region of an already-loaded image into a small
+ * square JPEG data URL. Never upscales beyond the source region.
+ */
+export function cropAvatar(
+  img: HTMLImageElement,
+  crop: CropRect,
+  maxDim = 240,
+  quality = 0.82
+): string {
+  const target = Math.max(1, Math.round(Math.min(maxDim, crop.side)));
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = target;
+  canvas.height = target;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D context not available");
-
-  // Draw the image cropped to a square center if non-square, so the bubble
-  // looks consistent regardless of source aspect ratio.
-  const sourceSide = Math.min(img.width, img.height);
-  const sx = (img.width - sourceSide) / 2;
-  const sy = (img.height - sourceSide) / 2;
-  ctx.drawImage(img, sx, sy, sourceSide, sourceSide, 0, 0, width, height);
-
+  // JPEG has no alpha — paint white first so transparent PNGs don't go black.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, target, target);
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, crop.sx, crop.sy, crop.side, crop.side, 0, 0, target, target);
   return canvas.toDataURL("image/jpeg", quality);
+}
+
+export async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  return loadImage(await readAsDataUrl(file));
 }
 
 function readAsDataUrl(file: File): Promise<string> {
@@ -43,15 +69,4 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error("Image load failed"));
     img.src = src;
   });
-}
-
-function scaleDown(
-  w: number,
-  h: number,
-  maxDim: number
-): { width: number; height: number } {
-  // We're cropping to square, so target is always maxDim × maxDim — but cap
-  // by the source so we never upscale.
-  const target = Math.min(maxDim, w, h);
-  return { width: target, height: target };
 }
