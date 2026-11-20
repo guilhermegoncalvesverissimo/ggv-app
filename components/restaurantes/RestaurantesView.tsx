@@ -20,6 +20,45 @@ function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
+type Lugar = { label: string; lat: number; lng: number };
+
+function parseCoords(q: string): { lat: number; lng: number } | null {
+  const pats = [
+    /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,
+    /@(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+    /[?&](?:q|query|ll)=(-?\d+\.\d+),\s*(-?\d+\.\d+)/,
+    /^\s*(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)\s*$/,
+  ];
+  for (const re of pats) {
+    const m = q.match(re);
+    if (m) {
+      const lat = Number(m[1]), lng = Number(m[2]);
+      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) return { lat, lng };
+    }
+  }
+  return null;
+}
+
+async function nominatim(q: string): Promise<Lugar[]> {
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=pt&countrycodes=pt,es&q=${encodeURIComponent(q)}`;
+  const rows = (await (await fetch(url, { headers: { Accept: "application/json" } })).json()) as { display_name: string; lat: string; lon: string }[];
+  return rows.map((r) => ({ label: r.display_name, lat: Number(r.lat), lng: Number(r.lon) }));
+}
+
+async function photon(q: string): Promise<Lugar[]> {
+  // Centrado em Portugal para dar prioridade a resultados de cá.
+  const url = `https://photon.komoot.io/api/?limit=6&lat=39.6&lon=-8.4&q=${encodeURIComponent(q)}`;
+  const data = (await (await fetch(url)).json()) as {
+    features: { geometry: { coordinates: [number, number] }; properties: Record<string, string | undefined> }[];
+  };
+  return (data.features ?? []).map((f) => {
+    const p = f.properties;
+    const label = [p.name, p.street && `${p.street}${p.housenumber ? ` ${p.housenumber}` : ""}`, p.city || p.town || p.village, p.state, p.country]
+      .filter(Boolean).join(", ");
+    return { label: label || "Local", lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] };
+  });
+}
+
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
 // Descrição com os links clicáveis.
@@ -104,12 +143,21 @@ export function RestaurantesView() {
     e?.preventDefault();
     const q = placeQuery.trim();
     if (!q) return;
+    // 1) Coordenadas ou link do Google Maps colados ("39.91, -8.62",
+    //    ".../@39.91,-8.62,15z", "...?q=39.91,-8.62", "!3d39.91!4d-8.62").
+    const coords = parseCoords(q);
+    if (coords) { pickPlace({ label: "Local escolhido", ...coords }); return; }
+    // Link curto do Google Maps (maps.app.goo.gl) não traz coordenadas.
+    if (/goo\.gl|maps\.app/.test(q)) {
+      alert("Esse link curto não traz a localização. No Google Maps, toca no sítio, copia as coordenadas (ex.: 39.9163, -8.6285) e cola-as aqui.");
+      return;
+    }
     setPlaceSearching(true);
     try {
-      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=pt&countrycodes=pt,es&q=${encodeURIComponent(q)}`;
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
-      const rows = (await res.json()) as { display_name: string; lat: string; lon: string }[];
-      const list = rows.map((r) => ({ label: r.display_name, lat: Number(r.lat), lng: Number(r.lon) }));
+      // 2) OpenStreetMap (Nominatim); 3) se não achar, Photon, que tolera
+      //    melhor nomes de estabelecimentos e erros de escrita.
+      let list = await nominatim(q);
+      if (!list.length) list = await photon(q);
       if (list.length === 1) pickPlace(list[0]); else setPlaceResults(list);
     } catch {
       setPlaceResults([]);
@@ -167,7 +215,7 @@ export function RestaurantesView() {
         <form onSubmit={searchPlace} className="flex items-center gap-2 rounded-full bg-canvas-soft px-4 py-2.5">
           <MapPin className="h-4 w-4 text-[#ea4335]" />
           <input value={placeQuery} onChange={(e) => { setPlaceQuery(e.target.value); setPlaceResults(null); }}
-            placeholder="Procurar local no mapa (terra, morada…)"
+            placeholder="Local: terra, morada, sítio ou coordenadas"
             className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted" />
           {origin?.kind === "place" ? (
             <button type="button" onClick={() => { setOrigin(null); setPlaceQuery(""); }} aria-label="Limpar local">
