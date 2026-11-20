@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Newspaper,
   Users,
+  UtensilsCrossed,
   Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ const tabs = [
   { href: "/chat", label: "Notas", icon: MessageCircle },
   { href: "/finance", label: "Wallet", icon: Wallet },
   { href: "/projects", label: "Projetos", icon: FolderKanban },
+  { href: "/restaurantes", label: "Restaurantes", icon: UtensilsCrossed },
 ] as const;
 
 export function BottomNav() {
