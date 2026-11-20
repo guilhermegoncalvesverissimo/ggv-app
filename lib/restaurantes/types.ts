@@ -21,3 +21,7 @@ export const CATEGORIAS: { nome: string; cor: string }[] = [
 ];
 
 export const corDe = (c: string) => CATEGORIAS.find((x) => x.nome === c)?.cor ?? "#6b7280";
+
+// Ponto de referência para "o que há perto": a minha posição ou um local
+// pesquisado no mapa.
+export type Origem = { lat: number; lng: number; label: string; kind: "me" | "place" };

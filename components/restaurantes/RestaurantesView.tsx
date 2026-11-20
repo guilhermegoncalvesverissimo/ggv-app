@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { LocateFixed, MapPin, Search, X } from "lucide-react";
-import { CATEGORIAS, corDe, type Restaurante } from "@/lib/restaurantes/types";
+import { CATEGORIAS, corDe, type Origem, type Restaurante } from "@/lib/restaurantes/types";
 import { cn } from "@/lib/utils";
 
 // O Leaflet mexe no window: só no browser.
@@ -47,7 +47,11 @@ export function RestaurantesView() {
   // "Desiludiu ou não volto" começa escondida.
   const [hidden, setHidden] = useState<Set<string>>(new Set(["Desiludiu ou não volto"]));
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [origin, setOrigin] = useState<Origem | null>(null);
+  // Pesquisa de locais (terra, morada, sítio) — OpenStreetMap/Nominatim.
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeResults, setPlaceResults] = useState<{ label: string; lat: number; lng: number }[] | null>(null);
+  const [placeSearching, setPlaceSearching] = useState(false);
   const [locating, setLocating] = useState(false);
   // Quantos se mostram na lista; volta ao início quando os filtros mudam.
   const [shown, setShown] = useState<{ sig: string; n: number }>({ sig: "", n: PAGE });
@@ -68,12 +72,12 @@ export function RestaurantesView() {
   const filtered = useMemo(() => {
     const q = norm(query.trim());
     const list = (all ?? []).filter((r) => !hidden.has(r.c) && (!q || norm(r.n).includes(q) || norm(r.d).includes(q)));
-    if (userPos) return [...list].sort((a, b) => km(userPos, a) - km(userPos, b));
+    if (origin) return [...list].sort((a, b) => km(origin, a) - km(origin, b));
     const order = (c: string) => { const i = CATEGORIAS.findIndex((x) => x.nome === c); return i < 0 ? 99 : i; };
     return [...list].sort((a, b) => order(a.c) - order(b.c) || a.n.localeCompare(b.n, "pt"));
-  }, [all, hidden, query, userPos]);
+  }, [all, hidden, query, origin]);
 
-  const sig = `${query}|${[...hidden].join(",")}|${userPos ? `${userPos.lat},${userPos.lng}` : ""}`;
+  const sig = `${query}|${[...hidden].join(",")}|${origin ? `${origin.lat},${origin.lng}` : ""}`;
   const limit = shown.sig === sig ? shown.n : PAGE;
 
   const selected = selectedId != null ? (all ?? []).find((r) => r.id === selectedId) ?? null : null;
@@ -90,10 +94,34 @@ export function RestaurantesView() {
     if (!("geolocation" in navigator)) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (p) => { setUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); setLocating(false); },
+      (p) => { setOrigin({ lat: p.coords.latitude, lng: p.coords.longitude, label: "A minha posição", kind: "me" }); setLocating(false); },
       () => setLocating(false),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 },
     );
+  }
+
+  async function searchPlace(e?: React.FormEvent) {
+    e?.preventDefault();
+    const q = placeQuery.trim();
+    if (!q) return;
+    setPlaceSearching(true);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&accept-language=pt&countrycodes=pt,es&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const rows = (await res.json()) as { display_name: string; lat: string; lon: string }[];
+      const list = rows.map((r) => ({ label: r.display_name, lat: Number(r.lat), lng: Number(r.lon) }));
+      if (list.length === 1) pickPlace(list[0]); else setPlaceResults(list);
+    } catch {
+      setPlaceResults([]);
+    } finally {
+      setPlaceSearching(false);
+    }
+  }
+
+  function pickPlace(p: { label: string; lat: number; lng: number }) {
+    setOrigin({ ...p, label: p.label.split(",").slice(0, 2).join(","), kind: "place" });
+    setPlaceResults(null);
+    setSelectedId(null);
   }
 
   if (error) return <p className="text-sm text-danger">{error}</p>;
@@ -110,11 +138,11 @@ export function RestaurantesView() {
             <button onClick={() => setQuery("")} aria-label="Limpar pesquisa"><X className="h-4 w-4 text-muted" /></button>
           )}
         </label>
-        <button onClick={userPos ? () => setUserPos(null) : locate} aria-label="Perto de mim"
+        <button onClick={origin?.kind === "me" ? () => setOrigin(null) : locate} aria-label="Perto de mim"
           className={cn("flex h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-sm font-medium",
-            userPos ? "bg-accent text-on-accent" : "bg-canvas-soft text-ink")}>
+            origin?.kind === "me" ? "bg-accent text-on-accent" : "bg-canvas-soft text-ink")}>
           <LocateFixed className={cn("h-4 w-4", locating && "animate-pulse")} />
-          {userPos ? "Perto" : "Perto de mim"}
+          {origin?.kind === "me" ? "Perto" : "Perto de mim"}
         </button>
       </div>
 
@@ -134,7 +162,38 @@ export function RestaurantesView() {
         })}
       </div>
 
-      <RestaurantesMap items={filtered} selectedId={selectedId} userPos={userPos} onSelect={setSelectedId} />
+      {/* Procurar um local no mapa */}
+      <div className="relative">
+        <form onSubmit={searchPlace} className="flex items-center gap-2 rounded-full bg-canvas-soft px-4 py-2.5">
+          <MapPin className="h-4 w-4 text-[#ea4335]" />
+          <input value={placeQuery} onChange={(e) => { setPlaceQuery(e.target.value); setPlaceResults(null); }}
+            placeholder="Procurar local no mapa (terra, morada…)"
+            className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-muted" />
+          {origin?.kind === "place" ? (
+            <button type="button" onClick={() => { setOrigin(null); setPlaceQuery(""); }} aria-label="Limpar local">
+              <X className="h-4 w-4 text-muted" />
+            </button>
+          ) : (
+            <button type="submit" disabled={placeSearching || !placeQuery.trim()} className="text-xs font-medium text-ink disabled:text-muted">
+              {placeSearching ? "A procurar…" : "Ir"}
+            </button>
+          )}
+        </form>
+        {placeResults && (
+          <div className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-2xl bg-card-bg shadow-lg ring-1 ring-card-border">
+            {placeResults.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-muted">Não encontrei esse local.</p>
+            ) : placeResults.map((p, i) => (
+              <button key={i} onClick={() => pickPlace(p)} className="flex w-full items-start gap-2 px-4 py-2.5 text-left text-sm text-ink hover:bg-canvas-soft">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted" />
+                <span className="line-clamp-2">{p.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <RestaurantesMap items={filtered} selectedId={selectedId} origin={origin} onSelect={setSelectedId} />
 
       {/* Restaurante escolhido */}
       {selected && (
@@ -145,7 +204,7 @@ export function RestaurantesView() {
               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: corDe(selected.c) }} />
                 {selected.c}
-                {userPos && <> · {km(userPos, selected).toFixed(1)} km</>}
+                {origin && <> · {km(origin, selected).toFixed(1)} km</>}
               </p>
             </div>
             <button onClick={() => setSelectedId(null)} aria-label="Fechar" className="text-muted"><X className="h-5 w-5" /></button>
@@ -165,7 +224,7 @@ export function RestaurantesView() {
       ) : (
         <div className="card divide-y divide-card-border">
           <p className="px-5 py-3 text-xs text-muted">
-            {filtered.length} restaurante{filtered.length === 1 ? "" : "s"}{userPos ? " · do mais perto para o mais longe" : ""}
+            {filtered.length} restaurante{filtered.length === 1 ? "" : "s"}{origin ? ` · do mais perto ${origin.kind === "me" ? "de mim" : `de ${origin.label}`} para o mais longe` : ""}
           </p>
           {filtered.slice(0, limit).map((r) => (
             <button key={r.id} onClick={() => { setSelectedId(r.id); window.scrollTo({ top: 0, behavior: "smooth" }); }}
@@ -175,7 +234,7 @@ export function RestaurantesView() {
                 <span className="block truncate text-sm font-medium text-ink">{r.n}</span>
                 {r.d && <span className="block truncate text-xs text-muted">{r.d.split("\n")[0]}</span>}
               </span>
-              {userPos && <span className="shrink-0 text-xs text-muted">{km(userPos, r).toFixed(1)} km</span>}
+              {origin && <span className="shrink-0 text-xs text-muted">{km(origin, r).toFixed(1)} km</span>}
             </button>
           ))}
           {filtered.length > limit && (
