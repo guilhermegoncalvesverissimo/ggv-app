@@ -14,7 +14,7 @@ export function Field({
 }) {
   return (
     <label className={`block min-w-0 ${className ?? ""}`}>
-      <span className="text-xs font-medium uppercase tracking-wide text-muted">
+      <span className="block text-xs font-medium uppercase tracking-wide text-muted">
         {label}
       </span>
       {children}
@@ -87,5 +87,48 @@ export function DeleteRow({
     >
       {label}
     </button>
+  );
+}
+
+/**
+ * Date/time input that behaves on iOS Safari: the native control there has
+ * its own intrinsic width and collapses to almost nothing when empty, so it
+ * overflowed its grid cell. Forced to a block of fixed height, left-aligned,
+ * with a hint shown while empty (iOS shows no placeholder for these).
+ */
+export function DateTimeInput({
+  type,
+  value,
+  onChange,
+  min,
+  max,
+  hint,
+}: {
+  type: "date" | "time";
+  value: string;
+  onChange: (v: string) => void;
+  min?: string;
+  max?: string;
+  hint: string;
+}) {
+  return (
+    <div className="relative mt-1">
+      <input
+        type={type}
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        className={`peer block h-12 w-full min-w-0 appearance-none rounded-2xl bg-canvas-soft/40 px-4 text-left text-base outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent [&::-webkit-date-and-time-value]:text-left ${
+          // Empty: hide the browser's own "mm/dd/yyyy" so only our hint shows.
+          value ? "text-ink" : "text-transparent focus:text-ink"
+        }`}
+      />
+      {!value && (
+        <span className="pointer-events-none absolute inset-y-0 left-4 flex items-center text-base text-muted/70 peer-focus:hidden">
+          {hint}
+        </span>
+      )}
+    </div>
   );
 }

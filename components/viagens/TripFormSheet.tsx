@@ -6,7 +6,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { ACCOUNT_COLORS } from "@/lib/wallet/colors";
 import { parseAmountToCents } from "@/lib/wallet/format";
 import type { Trip } from "@/lib/viagens/types";
-import { DeleteRow, Field, SheetActions, inputCls } from "./fields";
+import { DateTimeInput, DeleteRow, Field, SheetActions, inputCls } from "./fields";
 
 export type TripFormValues = {
   name: string;
@@ -100,7 +100,7 @@ export function TripFormSheet({
               value={emoji}
               onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
               placeholder="🌴"
-              className="mt-1 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
+              className="mt-1 block h-12 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </Field>
           <Field label="Nome">
@@ -128,21 +128,10 @@ export function TripFormSheet({
 
         <div className="grid grid-cols-2 gap-2">
           <Field label="Ida">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className={inputCls}
-            />
+            <DateTimeInput type="date" value={startDate} onChange={setStartDate} hint="Escolher" />
           </Field>
           <Field label="Volta">
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={inputCls}
-            />
+            <DateTimeInput type="date" value={endDate} min={startDate || undefined} onChange={setEndDate} hint="Escolher" />
           </Field>
         </div>
         {datesInvalid && (

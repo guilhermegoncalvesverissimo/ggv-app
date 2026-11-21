@@ -9,7 +9,7 @@ import {
   type TripItem,
   type TripItemKind,
 } from "@/lib/viagens/types";
-import { DeleteRow, Field, SheetActions, inputCls } from "./fields";
+import { DateTimeInput, DeleteRow, Field, SheetActions, inputCls } from "./fields";
 
 export type ItemValues = Omit<TripItem, "id">;
 
@@ -126,24 +126,12 @@ export function ItemSheet({
           />
         </Field>
 
-        <div className="grid grid-cols-[1fr_auto] gap-2">
+        <div className="grid grid-cols-[1fr_7rem] gap-2">
           <Field label="Dia">
-            <input
-              type="date"
-              value={date}
-              min={minDate}
-              max={maxDate}
-              onChange={(e) => setDate(e.target.value)}
-              className={inputCls}
-            />
+            <DateTimeInput type="date" value={date} min={minDate} max={maxDate} onChange={setDate} hint="Escolher" />
           </Field>
           <Field label="Hora">
-            <input
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className={`${inputCls} w-28`}
-            />
+            <DateTimeInput type="time" value={time} onChange={setTime} hint="--:--" />
           </Field>
         </div>
 
