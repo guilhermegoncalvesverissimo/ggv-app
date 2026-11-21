@@ -26,6 +26,16 @@ export type ChecklistItem = {
   done: boolean;
 };
 
+export type TripPhoto = {
+  id: string;
+  /** Storage paths in the ggv-trips bucket. */
+  path: string;
+  thumbPath: string;
+  width: number;
+  height: number;
+  createdAt: number;
+};
+
 export type Trip = {
   id: string;
   name: string;
@@ -38,11 +48,13 @@ export type Trip = {
   notes?: string;
   items: TripItem[];
   checklist: ChecklistItem[];
+  /** Managed by the photo routes, never sent in a PATCH. */
+  photos: TripPhoto[];
   createdAt: number;
   updatedAt: number;
 };
 
-export type TripInput = Omit<Trip, "id" | "createdAt" | "updatedAt">;
+export type TripInput = Omit<Trip, "id" | "createdAt" | "updatedAt" | "photos">;
 
 export const KIND_META: Record<TripItemKind, { label: string; emoji: string }> = {
   voo: { label: "Voo", emoji: "✈️" },
@@ -64,4 +76,11 @@ export const KIND_ORDER: TripItemKind[] = [
 
 export function localId(prefix = "i"): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export const PHOTO_BUCKET = "ggv-trips";
+
+/** URL the app serves a stored photo from (auth-gated, cached). */
+export function photoUrl(path: string): string {
+  return `/api/viagens/fotos?p=${encodeURIComponent(path)}`;
 }

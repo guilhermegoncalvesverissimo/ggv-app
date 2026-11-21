@@ -1,4 +1,4 @@
-import type { Trip, TripInput } from "./types";
+import type { Trip, TripInput, TripPhoto } from "./types";
 
 /** Typed wrappers around /api/viagens*. Session-cookie auth; 401 → /login. */
 
@@ -49,4 +49,32 @@ export async function patchTrip(id: string, patch: Partial<TripInput>): Promise<
 
 export async function deleteTrip(id: string): Promise<void> {
   await api(`/api/viagens/${id}`, { method: "DELETE" });
+}
+
+export async function uploadTripPhoto(
+  tripId: string,
+  photo: { full: Blob; thumb: Blob; width: number; height: number }
+): Promise<TripPhoto> {
+  const form = new FormData();
+  form.append("full", photo.full, "full.jpg");
+  form.append("thumb", photo.thumb, "thumb.jpg");
+  form.append("width", String(photo.width));
+  form.append("height", String(photo.height));
+  // No JSON content-type here: the browser sets the multipart boundary.
+  const r = await fetch(`/api/viagens/${tripId}/fotos`, {
+    method: "POST",
+    credentials: "same-origin",
+    body: form,
+  });
+  if (r.status === 401) {
+    notAuthorisedRedirect();
+    throw new Error("Unauthorized");
+  }
+  const j = (await r.json().catch(() => ({}))) as { photo?: TripPhoto; error?: string };
+  if (!r.ok || !j.photo) throw new Error(j.error ?? `HTTP ${r.status}`);
+  return j.photo;
+}
+
+export async function deleteTripPhoto(tripId: string, photoId: string): Promise<void> {
+  await api(`/api/viagens/${tripId}/fotos/${photoId}`, { method: "DELETE" });
 }

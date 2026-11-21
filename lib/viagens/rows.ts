@@ -1,4 +1,4 @@
-import type { ChecklistItem, Trip, TripInput, TripItem } from "@/lib/viagens/types";
+import type { ChecklistItem, Trip, TripInput, TripItem, TripPhoto } from "@/lib/viagens/types";
 
 export type Row = {
   id: string;
@@ -12,6 +12,7 @@ export type Row = {
   notes: string | null;
   items: TripItem[] | null;
   checklist: ChecklistItem[] | null;
+  photos?: TripPhoto[] | null;
   created_at: string;
   updated_at: string;
 };
@@ -29,6 +30,7 @@ export function toTrip(r: Row): Trip {
     notes: r.notes ?? undefined,
     items: Array.isArray(r.items) ? r.items : [],
     checklist: Array.isArray(r.checklist) ? r.checklist : [],
+    photos: Array.isArray(r.photos) ? r.photos : [],
     createdAt: new Date(r.created_at).getTime(),
     updatedAt: new Date(r.updated_at).getTime(),
   };

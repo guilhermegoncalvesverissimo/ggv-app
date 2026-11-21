@@ -30,10 +30,12 @@ import {
   type Trip,
   type TripInput,
   type TripItem,
+  type TripPhoto,
 } from "@/lib/viagens/types";
 import { cn } from "@/lib/utils";
 import { TripFormSheet } from "./TripFormSheet";
 import { ItemSheet, type ItemValues } from "./ItemSheet";
+import { TripPhotos } from "./TripPhotos";
 
 type Tab = "roteiro" | "checklist" | "notas";
 
@@ -45,7 +47,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function TripDetail({ id }: { id: string }) {
   const router = useRouter();
-  const { trips, hydrated, updateTrip, removeTrip } = useTrips();
+  const { trips, hydrated, updateTrip, removeTrip, setTripPhotos } = useTrips();
   const trip = trips.find((t) => t.id === id) ?? null;
 
   if (!hydrated) {
@@ -71,6 +73,7 @@ export function TripDetail({ id }: { id: string }) {
     <TripView
       trip={trip}
       onPatch={(patch) => updateTrip(trip.id, patch)}
+      setPhotos={(update) => setTripPhotos(trip.id, update)}
       onDelete={() => {
         removeTrip(trip.id);
         router.replace("/viagens");
@@ -94,10 +97,12 @@ function TripView({
   trip,
   onPatch,
   onDelete,
+  setPhotos,
 }: {
   trip: Trip;
   onPatch: (patch: Partial<TripInput>) => void;
   onDelete: () => void;
+  setPhotos: (update: (photos: TripPhoto[]) => TripPhoto[]) => void;
 }) {
   const [tab, setTab] = useState<Tab>("roteiro");
   const [editOpen, setEditOpen] = useState(false);
@@ -183,6 +188,9 @@ function TripView({
       )}
       {tab === "checklist" && (
         <Checklist items={trip.checklist} onChange={(checklist) => onPatch({ checklist })} />
+      )}
+      {tab === "notas" && (
+        <TripPhotos tripId={trip.id} photos={trip.photos} setPhotos={setPhotos} />
       )}
       {tab === "notas" && (
         <Notes

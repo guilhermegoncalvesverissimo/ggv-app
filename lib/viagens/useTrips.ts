@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Trip, TripInput } from "./types";
+import type { Trip, TripInput, TripPhoto } from "./types";
 import { createTrip, deleteTrip, fetchTrips, patchTrip } from "./api";
 
 function tempId(): string {
@@ -53,7 +53,7 @@ export function useTrips() {
   /** Returns the temp id so the caller can navigate once it's swapped. */
   const addTrip = useCallback((input: TripInput, onCreated?: (trip: Trip) => void) => {
     const now = Date.now();
-    const optimistic: Trip = { ...input, id: tempId(), createdAt: now, updatedAt: now };
+    const optimistic: Trip = { ...input, photos: [], id: tempId(), createdAt: now, updatedAt: now };
     setTrips((prev) => [optimistic, ...prev]);
     void (async () => {
       try {
@@ -99,5 +99,15 @@ export function useTrips() {
     [scheduleReconcile]
   );
 
-  return { trips, hydrated, error, addTrip, updateTrip, removeTrip };
+  /** Local-only: the photo routes already persisted the change. */
+  const setTripPhotos = useCallback(
+    (id: string, update: (photos: TripPhoto[]) => TripPhoto[]) => {
+      setTrips((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, photos: update(t.photos) } : t))
+      );
+    },
+    []
+  );
+
+  return { trips, hydrated, error, addTrip, updateTrip, removeTrip, setTripPhotos };
 }
