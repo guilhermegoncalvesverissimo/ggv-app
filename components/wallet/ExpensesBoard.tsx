@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, TrendingDown } from "lucide-react";
+import { Plus, TrendingDown, Zap } from "lucide-react";
 import { useWallet } from "@/lib/wallet/useWallet";
 import { formatCents } from "@/lib/wallet/format";
 import {
@@ -13,6 +13,7 @@ import {
 import { PeriodSelector } from "./PeriodSelector";
 import { CategoriesOverview } from "./CategoriesOverview";
 import { AddTransactionSheet } from "./AddTransactionSheet";
+import { ApplePaySheet } from "./ApplePaySheet";
 import type { Transaction } from "@/lib/wallet/types";
 
 /**
@@ -33,6 +34,7 @@ export function ExpensesBoard() {
   } = useWallet();
   const [period, setPeriod] = useState<Period>(() => currentMonth());
   const [addTxOpen, setAddTxOpen] = useState(false);
+  const [applePayOpen, setApplePayOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   const filtered = useMemo(
@@ -82,6 +84,24 @@ export function ExpensesBoard() {
         transactions={filtered}
         onEditTransaction={setEditingTx}
       />
+
+      <button
+        type="button"
+        onClick={() => setApplePayOpen(true)}
+        className="card flex w-full items-center gap-3 p-4 text-left transition active:scale-[0.99]"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-canvas-soft/60">
+          <Zap className="h-5 w-5 text-ink" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-ink">Apple Pay automático</span>
+          <span className="block text-xs text-muted">
+            Regista sozinho cada pagamento feito com o iPhone
+          </span>
+        </span>
+      </button>
+
+      <ApplePaySheet open={applePayOpen} onClose={() => setApplePayOpen(false)} />
 
       <button
         type="button"

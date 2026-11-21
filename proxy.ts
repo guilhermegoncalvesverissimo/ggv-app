@@ -8,6 +8,7 @@ import { SESSION_COOKIE, verifySession } from "@/lib/auth/session";
  *   - `/login` and the login form
  *   - `/api/auth/*` (login / logout)
  *   - `/api/news` and `/api/mcp` (used by the daily routine — own bearer auth)
+ *   - `/api/hooks/*` (iOS Shortcuts webhooks — own bearer auth)
  *   - `/.well-known/*` (oauth-protected-resource metadata)
  *   - Next.js internals + static assets
  *
@@ -40,6 +41,7 @@ export const config = {
      *   api/news       — public news REST (routine + Notícias fetch)
      *   api/mcp        — public MCP server (claude.ai connector)
      *   api/auth       — login / logout
+     *   api/hooks      — webhooks with their own bearer auth (Apple Pay)
      *   _next/static   — Next.js static chunks
      *   _next/image    — Next.js optimized images
      *   favicon\.ico   — old favicon (in case)
@@ -49,6 +51,6 @@ export const config = {
      *   login          — the login page itself
      *   \.well-known   — RFC 9728 metadata
      */
-    "/((?!api/news|api/mcp|api/auth|_next/static|_next/image|favicon\\.ico|icon\\.svg|apple-icon|manifest\\.json|login|\\.well-known).*)",
+    "/((?!api/news|api/mcp|api/auth|api/hooks|_next/static|_next/image|favicon\\.ico|icon\\.svg|apple-icon|manifest\\.json|login|\\.well-known).*)",
   ],
 };
