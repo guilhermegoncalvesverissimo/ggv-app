@@ -7,6 +7,7 @@ import { ACCOUNT_COLORS } from "@/lib/wallet/colors";
 import { parseAmountToCents } from "@/lib/wallet/format";
 import type { Trip } from "@/lib/viagens/types";
 import { DateTimeInput, DeleteRow, Field, SheetActions, inputCls } from "./fields";
+import { singleEmoji } from "@/lib/emoji";
 
 export type TripFormValues = {
   name: string;
@@ -87,7 +88,7 @@ export function TripFormSheet({
       </h2>
 
       <form
-        className="max-h-[75dvh] space-y-3 overflow-y-auto pt-2"
+        className="-mx-1 max-h-[75dvh] space-y-3 overflow-y-auto px-1 pb-1 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
@@ -98,9 +99,9 @@ export function TripFormSheet({
             <input
               type="text"
               value={emoji}
-              onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
+              onChange={(e) => setEmoji(singleEmoji(e.target.value))}
               placeholder="🌴"
-              className="mt-1 block h-12 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
+              className="mt-1 block h-12 w-14 rounded-2xl bg-canvas-soft/40 px-0 py-0 text-center text-xl leading-none outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />
           </Field>
           <Field label="Nome">

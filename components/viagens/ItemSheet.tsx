@@ -87,7 +87,7 @@ export function ItemSheet({
       </h2>
 
       <form
-        className="max-h-[75dvh] space-y-3 overflow-y-auto pt-2"
+        className="-mx-1 max-h-[75dvh] space-y-3 overflow-y-auto px-1 pb-1 pt-2"
         onSubmit={(e) => {
           e.preventDefault();
           submit();

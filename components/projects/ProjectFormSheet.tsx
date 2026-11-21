@@ -11,6 +11,7 @@ import {
 } from "@/lib/projects/status";
 import type { Project, ProjectStatus } from "@/lib/projects/types";
 import { TagsInput } from "./TagsInput";
+import { singleEmoji } from "@/lib/emoji";
 
 export type ProjectFormValues = {
   name: string;
@@ -110,7 +111,7 @@ export function ProjectFormSheet({
             <input
               type="text"
               value={emoji}
-              onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
+              onChange={(e) => setEmoji(singleEmoji(e.target.value))}
               placeholder="🚀"
               className="mt-1 w-14 rounded-2xl bg-canvas-soft/40 px-3 py-3 text-center text-lg outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
             />

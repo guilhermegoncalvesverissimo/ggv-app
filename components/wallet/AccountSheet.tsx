@@ -5,6 +5,7 @@ import { Plus, Check, ChevronLeft } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { ACCOUNT_COLORS, DEFAULT_ACCOUNT_COLOR } from "@/lib/wallet/colors";
 import type { Account } from "@/lib/wallet/types";
+import { singleEmoji } from "@/lib/emoji";
 
 type Selected = string | "all";
 
@@ -94,7 +95,7 @@ export function AccountSheet({
               <input
                 type="text"
                 value={emoji}
-                onChange={(e) => setEmoji(e.target.value.slice(0, 2))}
+                onChange={(e) => setEmoji(singleEmoji(e.target.value))}
                 placeholder="Ex.: 💼 ou 🐾"
                 className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-4 py-3 text-base text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
               />

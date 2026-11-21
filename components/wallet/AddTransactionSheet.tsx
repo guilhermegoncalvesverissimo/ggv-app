@@ -6,6 +6,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { type Category, categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
 import type { Account, Transaction, TxType } from "@/lib/wallet/types";
+import { singleEmoji } from "@/lib/emoji";
 
 type TxPayload = {
   accountId: string;
@@ -268,7 +269,7 @@ export function AddTransactionSheet({
             <input
               type="text"
               value={newCatEmoji}
-              onChange={(e) => setNewCatEmoji(e.target.value.slice(0, 2))}
+              onChange={(e) => setNewCatEmoji(singleEmoji(e.target.value))}
               placeholder="🙂"
               aria-label="Emoji da categoria"
               className="w-12 rounded-xl bg-canvas px-2 py-2 text-center text-lg outline-none ring-2 ring-transparent focus:ring-accent"
