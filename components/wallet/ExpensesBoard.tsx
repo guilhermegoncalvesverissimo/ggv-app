@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, TrendingDown, Zap } from "lucide-react";
+import { FileUp, Plus, TrendingDown, Zap } from "lucide-react";
 import { useWallet } from "@/lib/wallet/useWallet";
 import { formatCents } from "@/lib/wallet/format";
 import {
@@ -14,6 +14,7 @@ import { PeriodSelector } from "./PeriodSelector";
 import { CategoriesOverview } from "./CategoriesOverview";
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { ApplePaySheet } from "./ApplePaySheet";
+import { ImportStatementSheet } from "./ImportStatementSheet";
 import type { Transaction } from "@/lib/wallet/types";
 
 /**
@@ -35,6 +36,7 @@ export function ExpensesBoard() {
   const [period, setPeriod] = useState<Period>(() => currentMonth());
   const [addTxOpen, setAddTxOpen] = useState(false);
   const [applePayOpen, setApplePayOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   const filtered = useMemo(
@@ -101,7 +103,30 @@ export function ExpensesBoard() {
         </span>
       </button>
 
+      <button
+        type="button"
+        onClick={() => setImportOpen(true)}
+        className="card flex w-full items-center gap-3 p-4 text-left transition active:scale-[0.99]"
+      >
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-canvas-soft/60">
+          <FileUp className="h-5 w-5 text-ink" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-ink">Importar extrato</span>
+          <span className="block text-xs text-muted">
+            Traz o histórico do Revolut a partir do CSV do extrato
+          </span>
+        </span>
+      </button>
+
       <ApplePaySheet open={applePayOpen} onClose={() => setApplePayOpen(false)} />
+      <ImportStatementSheet
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        accounts={accounts}
+        transactions={transactions}
+        onAdd={addTransaction}
+      />
 
       <button
         type="button"
