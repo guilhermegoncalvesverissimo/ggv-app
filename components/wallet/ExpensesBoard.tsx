@@ -114,7 +114,7 @@ export function ExpensesBoard() {
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-ink">Importar extrato</span>
           <span className="block text-xs text-muted">
-            Traz o histórico do Revolut a partir do CSV do extrato
+            Traz o histórico do Revolut a partir do extrato (PDF ou CSV)
           </span>
         </span>
       </button>

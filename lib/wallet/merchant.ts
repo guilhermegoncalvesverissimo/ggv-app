@@ -37,6 +37,7 @@ const RULES: [RegExp, string][] = [
   [/\buber\b|bolt|free\s*now|cabify|galp|repsol|\bbp\b|cepsa|prio|via\s*verde|\bcp\b|comboios|metro|carris|fertagus|\bstcp\b|parque|parking|emel|easypark|ryanair|tap\b|easyjet|flixbus|rede\s*expressos/i, "transport"],
   [/netflix|spotify|disney|hbo|max\.com|prime\s*video|youtube|apple\.com|icloud|google\s*(one|storage)|chatgpt|openai|anthropic|claude|patreon|adobe|microsoft|dropbox|notion/i, "subscriptions"],
   [/farm[aá]cia|wells|cl[ií]nica|hospital|dentist|cuf\b|luz\s*sa[uú]de|lusíadas|lusiadas|[oó]tica|ginásio|ginasio|holmes|fitness|solinca/i, "health"],
+  [/padel|t[eé]nis|tennis|clube|club\b|betclic|placard|bwin|solverde|casino|bowling|karting|paintball/i, "leisure"],
   [/cinema|nos\s*cinemas|cinemas|ticketline|blueticket|teatro|museu|concerto|steam|playstation|xbox|nintendo|bowling|bar\b|discoteca/i, "leisure"],
   [/edp|endesa|goldenergy|[aá]guas|epal|meo\b|nos\b|vodafone|digi\b|nowo/i, "bills"],
   [/ikea|leroy|aki\b|maxmat|conforama|jysk/i, "home"],

@@ -58,7 +58,10 @@ export function ImportStatementSheet({
     if (!file) return;
     reset();
     try {
-      const parsed = parseStatement(await file.text());
+      const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+      const parsed = isPdf
+        ? await (await import("@/lib/wallet/statementPdf")).parseRevolutPdf(await file.arrayBuffer())
+        : parseStatement(await file.text());
       if (parsed.length === 0) throw new Error("Não encontrei movimentos neste ficheiro.");
       // Same day + amount + direction already in the Wallet → probably the
       // Apple Pay shortcut (or an earlier import) got it already.
@@ -116,8 +119,8 @@ export function ImportStatementSheet({
           {!rows && (
             <p className="mt-1 text-sm text-muted">
               No Revolut: <b className="text-ink">Conta → ⋯ → Extrato</b>, escolhe o
-              formato <b className="text-ink">Excel/CSV</b> e o período (ex.: novembro),
-              e guarda o ficheiro. Depois escolhe-o aqui. Vês tudo antes de importar.
+              período (ex.: novembro) e guarda o PDF (ou o Excel/CSV). Depois escolhe-o
+              aqui. Vês tudo antes de importar.
             </p>
           )}
         </div>
@@ -137,13 +140,13 @@ export function ImportStatementSheet({
             onClick={() => inputRef.current?.click()}
             className="flex w-full items-center justify-center gap-2 rounded-3xl border border-dashed border-card-border px-4 py-6 text-sm font-medium text-ink transition active:scale-[0.99]"
           >
-            <FileUp className="h-5 w-5" /> Escolher ficheiro CSV
+            <FileUp className="h-5 w-5" /> Escolher extrato (PDF ou CSV)
           </button>
         )}
         <input
           ref={inputRef}
           type="file"
-          accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel"
+          accept=".pdf,application/pdf,.csv,text/csv,text/comma-separated-values,application/vnd.ms-excel"
           hidden
           onChange={(e) => {
             void onFile(e.target.files?.[0]);
