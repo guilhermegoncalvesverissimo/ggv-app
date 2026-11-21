@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Account, Transaction } from "./types";
+import type { Account, Transaction, WalletEvent } from "./types";
+import type { EventInput } from "./events";
 import type { Budget } from "./types";
 import { type Category, setCustomCategories } from "./categories";
 import { normaliseAccountColor } from "./colors";
@@ -12,6 +13,10 @@ import {
   deleteAccount,
   deleteCategory,
   deleteTransaction,
+  assignToEvent,
+  createWalletEvent,
+  deleteWalletEvent,
+  patchWalletEvent,
   fetchWallet,
   patchAccount,
   patchTransaction,
@@ -105,6 +110,7 @@ export function useWallet() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [customCategories, setCustomCats] = useState<Category[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [events, setEvents] = useState<WalletEvent[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const reconcileScheduled = useRef(false);
 
@@ -122,6 +128,7 @@ export function useWallet() {
       setTransactions(w.transactions);
       applyCats(w.categories);
       setBudgets(w.budgets);
+      setEvents(w.events);
     } catch {
       /* api.ts redirects on 401; keep optimistic state otherwise */
     }
@@ -145,12 +152,14 @@ export function useWallet() {
           setTransactions(fresh.transactions);
           applyCats(fresh.categories);
           setBudgets(fresh.budgets);
+          setEvents(fresh.events);
         } else {
           markMigrated();
           setAccounts(w.accounts);
           setTransactions(w.transactions);
           applyCats(w.categories);
           setBudgets(w.budgets);
+          setEvents(w.events);
         }
       } catch {
         /* swallow — 401 redirects, other errors leave empty */
@@ -249,9 +258,10 @@ export function useWallet() {
   );
 
   const addTransaction = useCallback(
-    (tx: Omit<Transaction, "id" | "createdAt">) => {
+    (tx: Omit<Transaction, "id" | "createdAt" | "eventId"> & { eventId?: string | null }) => {
       const optimistic: Transaction = {
         ...tx,
+        eventId: tx.eventId ?? undefined,
         id: tempId("t"),
         createdAt: Date.now(),
       };
@@ -288,6 +298,7 @@ export function useWallet() {
             category: tx.category,
             note: tx.note,
             date: tx.date,
+            eventId: tx.eventId ?? undefined,
           });
           setTransactions((prev) =>
             prev.map((t) => (t.id === optimistic.id ? created : t))
@@ -312,6 +323,7 @@ export function useWallet() {
         category?: string;
         note?: string;
         date?: string;
+        eventId?: string | null;
       }
     ) => {
       setTransactions((prev) =>
@@ -321,6 +333,7 @@ export function useWallet() {
                 ...t,
                 ...patch,
                 note: "note" in patch ? patch.note : t.note,
+                eventId: "eventId" in patch ? patch.eventId ?? undefined : t.eventId,
               }
             : t
         )
@@ -441,7 +454,70 @@ export function useWallet() {
     [scheduleReconcile]
   );
 
+  const addEvent = useCallback(
+    (input: EventInput, onCreated?: (e: WalletEvent) => void) => {
+      const optimistic: WalletEvent = { ...input, id: tempId("e"), createdAt: Date.now() };
+      setEvents((prev) => [optimistic, ...prev]);
+      void (async () => {
+        try {
+          const created = await createWalletEvent(input);
+          setEvents((prev) => prev.map((e) => (e.id === optimistic.id ? created : e)));
+          onCreated?.(created);
+        } catch (err) {
+          setEvents((prev) => prev.filter((e) => e.id !== optimistic.id));
+          alert(err instanceof Error ? err.message : "Não foi possível criar o evento");
+        }
+      })();
+    },
+    []
+  );
+
+  const updateEvent = useCallback(
+    (id: string, patch: Partial<EventInput>) => {
+      setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, ...patch } : e)));
+      if (id.startsWith("temp_")) return;
+      void patchWalletEvent(id, patch).catch(() => scheduleReconcile());
+    },
+    [scheduleReconcile]
+  );
+
+  /** Deletes the event; its transactions stay, just ungrouped. */
+  const removeEvent = useCallback(
+    (id: string) => {
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      setTransactions((prev) =>
+        prev.map((t) => (t.eventId === id ? { ...t, eventId: undefined } : t))
+      );
+      if (id.startsWith("temp_")) return;
+      void deleteWalletEvent(id).catch(() => scheduleReconcile());
+    },
+    [scheduleReconcile]
+  );
+
+  const setEventTransactions = useCallback(
+    (eventId: string, change: { add: string[]; remove: string[] }) => {
+      const add = new Set(change.add);
+      const remove = new Set(change.remove);
+      setTransactions((prev) =>
+        prev.map((t) =>
+          add.has(t.id)
+            ? { ...t, eventId }
+            : remove.has(t.id) && t.eventId === eventId
+              ? { ...t, eventId: undefined }
+              : t
+        )
+      );
+      void assignToEvent(eventId, change).catch(() => scheduleReconcile());
+    },
+    [scheduleReconcile]
+  );
+
   return {
+    events,
+    addEvent,
+    updateEvent,
+    removeEvent,
+    setEventTransactions,
     accounts,
     transactions,
     customCategories,

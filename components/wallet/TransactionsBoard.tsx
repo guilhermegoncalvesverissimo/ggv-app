@@ -39,6 +39,7 @@ export function TransactionsBoard() {
     updateTransaction,
     removeTransaction,
     addCategory,
+      events,
   } = useWallet();
   const [addTxOpen, setAddTxOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
@@ -197,6 +198,7 @@ export function TransactionsBoard() {
         customCategories={customCategories}
         accounts={accounts}
         defaultAccountId={defaultAccountId}
+        events={events}
       />
       <AddTransactionSheet
         open={!!editingTx}
@@ -212,6 +214,7 @@ export function TransactionsBoard() {
         customCategories={customCategories}
         accounts={accounts}
         defaultAccountId={defaultAccountId}
+        events={events}
       />
       <AccountSheet
         open={accountSheetOpen}

@@ -21,6 +21,19 @@ export type Transaction = {
   note?: string;
   /** ISO date `YYYY-MM-DD`. */
   date: string;
+  /** The event (weekend away, wedding…) this belongs to, if any. */
+  eventId?: string;
+  createdAt: number;
+};
+
+/** A group of transactions, to see what something cost in total. */
+export type WalletEvent = {
+  id: string;
+  name: string;
+  emoji?: string;
+  color: string;
+  startDate?: string;
+  endDate?: string;
   createdAt: number;
 };
 

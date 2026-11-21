@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/news/supabase";
-import type { Account, Transaction } from "@/lib/wallet/types";
+import type { Account, Transaction, WalletEvent } from "@/lib/wallet/types";
 import type { Category } from "@/lib/wallet/categories";
 
 export const runtime = "nodejs";
@@ -21,6 +21,16 @@ type TxRow = {
   category: string;
   note: string | null;
   date: string;
+  event_id?: string | null;
+  created_at: string;
+};
+type EventRow = {
+  id: string;
+  name: string;
+  emoji: string | null;
+  color: string;
+  start_date: string | null;
+  end_date: string | null;
   created_at: string;
 };
 type CategoryRow = {
@@ -48,6 +58,18 @@ function toTx(r: TxRow): Transaction {
     category: r.category,
     note: r.note ?? undefined,
     date: r.date,
+    eventId: r.event_id ?? undefined,
+    createdAt: new Date(r.created_at).getTime(),
+  };
+}
+function toEvent(r: EventRow): WalletEvent {
+  return {
+    id: r.id,
+    name: r.name,
+    emoji: r.emoji ?? undefined,
+    color: r.color,
+    startDate: r.start_date ?? undefined,
+    endDate: r.end_date ?? undefined,
     createdAt: new Date(r.created_at).getTime(),
   };
 }
@@ -77,6 +99,7 @@ export async function GET() {
     { data: tx, error: tErr },
     { data: cats, error: cErr },
     { data: buds, error: bErr },
+    { data: evs, error: eErr },
   ] = await Promise.all([
     sb
       .from("ggv_accounts")
@@ -88,6 +111,10 @@ export async function GET() {
       .select("*")
       .order("created_at", { ascending: true }),
     sb.from("ggv_budgets").select("category, amount_cents"),
+    sb
+      .from("ggv_wallet_events")
+      .select("*")
+      .order("created_at", { ascending: false }),
   ]);
 
   // Accounts/transactions tables missing → degrade gracefully.
@@ -114,7 +141,10 @@ export async function GET() {
         (buds ?? []) as { category: string; amount_cents: number }[]
       ).map((b) => ({ category: b.category, amountCents: b.amount_cents }));
 
+  const events = eErr ? [] : ((evs ?? []) as EventRow[]).map(toEvent);
+
   return NextResponse.json({
+    events,
     accounts: ((acc ?? []) as AccountRow[]).map(toAccount),
     transactions: ((tx ?? []) as TxRow[]).map(toTx),
     categories,

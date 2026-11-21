@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import { Sheet } from "@/components/ui/Sheet";
 import { type Category, categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
-import type { Account, Transaction, TxType } from "@/lib/wallet/types";
+import type { Account, Transaction, TxType, WalletEvent } from "@/lib/wallet/types";
 import { singleEmoji } from "@/lib/emoji";
 
 type TxPayload = {
@@ -15,6 +15,8 @@ type TxPayload = {
   category: string;
   note?: string;
   date: string;
+  /** null clears it (edit mode). */
+  eventId?: string | null;
 };
 
 export function AddTransactionSheet({
@@ -28,6 +30,8 @@ export function AddTransactionSheet({
   customCategories,
   accounts,
   defaultAccountId,
+  events = [],
+  defaultEventId,
 }: {
   open: boolean;
   onClose: () => void;
@@ -47,6 +51,9 @@ export function AddTransactionSheet({
   customCategories: Category[];
   accounts: Account[];
   defaultAccountId: string;
+  /** When given, the sheet offers to put the transaction in an event. */
+  events?: WalletEvent[];
+  defaultEventId?: string;
 }) {
   const [type, setType] = useState<TxType>("expense");
   const [amount, setAmount] = useState("");
@@ -54,6 +61,7 @@ export function AddTransactionSheet({
   const [note, setNote] = useState("");
   const [date, setDate] = useState(todayIso());
   const [accountId, setAccountId] = useState<string>(defaultAccountId);
+  const [eventId, setEventId] = useState<string | null>(defaultEventId ?? null);
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [newCatEmoji, setNewCatEmoji] = useState("");
   const [newCatLabel, setNewCatLabel] = useState("");
@@ -72,6 +80,7 @@ export function AddTransactionSheet({
       setNote(editing.note ?? "");
       setDate(editing.date);
       setAccountId(editing.accountId);
+      setEventId(editing.eventId ?? null);
     } else {
       setType("expense");
       setAmount("");
@@ -79,10 +88,11 @@ export function AddTransactionSheet({
       setNote("");
       setDate(todayIso());
       setAccountId(defaultAccountId);
+      setEventId(defaultEventId ?? null);
     }
     const t = setTimeout(() => amountRef.current?.focus(), 250);
     return () => clearTimeout(t);
-  }, [open, defaultAccountId, editing]);
+  }, [open, defaultAccountId, editing, defaultEventId]);
 
   // `customCategories` in deps so the list refreshes when one is created.
   const visibleCategories = useMemo(
@@ -128,6 +138,7 @@ export function AddTransactionSheet({
       category,
       note: note.trim() || undefined,
       date,
+      ...(events.length > 0 || eventId ? { eventId: editing ? eventId : eventId ?? undefined } : {}),
     };
     if (editing && onEdit) onEdit(editing.id, payload);
     else onAdd(payload);
@@ -326,6 +337,32 @@ export function AddTransactionSheet({
             />
           </label>
         </div>
+
+        {events.length > 0 && (
+          <div>
+            <span className="px-1 text-xs font-medium uppercase tracking-wide text-muted">
+              Evento
+            </span>
+            <div className="-mx-5 mt-1.5 overflow-x-auto px-5">
+              <div className="flex gap-2 pb-1">
+                {[{ id: null, label: "Nenhum" } as const, ...events.map((e) => ({ id: e.id, label: `${e.emoji ? `${e.emoji} ` : ""}${e.name}` }))].map(
+                  (opt) => (
+                    <button
+                      key={opt.id ?? "none"}
+                      type="button"
+                      onClick={() => setEventId(opt.id)}
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                        eventId === opt.id ? "bg-elevated text-white" : "bg-canvas-soft/40 text-ink"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 pt-1">
           <button

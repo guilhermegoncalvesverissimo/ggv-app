@@ -15,6 +15,7 @@ import { CategoriesOverview } from "./CategoriesOverview";
 import { AddTransactionSheet } from "./AddTransactionSheet";
 import { ApplePaySheet } from "./ApplePaySheet";
 import { ImportStatementSheet } from "./ImportStatementSheet";
+import { EventsSection } from "./EventsSection";
 import type { Transaction } from "@/lib/wallet/types";
 
 /**
@@ -32,6 +33,8 @@ export function ExpensesBoard() {
     updateTransaction,
     removeTransaction,
     addCategory,
+    events,
+    addEvent,
   } = useWallet();
   const [period, setPeriod] = useState<Period>(() => currentMonth());
   const [addTxOpen, setAddTxOpen] = useState(false);
@@ -87,6 +90,8 @@ export function ExpensesBoard() {
         onEditTransaction={setEditingTx}
       />
 
+      <EventsSection events={events} transactions={transactions} onAdd={addEvent} />
+
       <button
         type="button"
         onClick={() => setApplePayOpen(true)}
@@ -125,6 +130,7 @@ export function ExpensesBoard() {
         onClose={() => setImportOpen(false)}
         accounts={accounts}
         transactions={transactions}
+        events={events}
         onAdd={addTransaction}
       />
 
@@ -146,6 +152,7 @@ export function ExpensesBoard() {
         customCategories={customCategories}
         accounts={accounts}
         defaultAccountId={accounts[0]?.id ?? ""}
+        events={events}
       />
       <AddTransactionSheet
         open={!!editingTx}
@@ -158,6 +165,7 @@ export function ExpensesBoard() {
         customCategories={customCategories}
         accounts={accounts}
         defaultAccountId={accounts[0]?.id ?? ""}
+        events={events}
       />
     </>
   );

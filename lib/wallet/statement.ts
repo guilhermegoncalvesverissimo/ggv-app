@@ -117,13 +117,14 @@ export function parseStatement(text: string): StatementRow[] {
   return out;
 }
 
-/** What we pre-tick: completed card payments in euros. Transfers, top-ups,
- *  exchanges and pending rows show up unticked, to opt into by hand. */
+/** What we pre-tick: completed card payments and MB WAY payments in euros.
+ *  Bank transfers, top-ups, exchanges and pending rows show up unticked, to
+ *  opt into by hand. */
 export function selectedByDefault(r: StatementRow): boolean {
   return (
     r.amountCents < 0 &&
     r.completed &&
     (r.currency === "" || r.currency === "EUR") &&
-    (r.kind === "" || r.kind === "CARD_PAYMENT" || r.kind === "ATM")
+    (r.kind === "" || r.kind === "CARD_PAYMENT" || r.kind === "ATM" || r.kind === "MBWAY")
   );
 }

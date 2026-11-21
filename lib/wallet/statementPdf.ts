@@ -136,6 +136,7 @@ export function parseRevolutPdfLines(lines: string[]): StatementRow[] {
     let description = d.title;
     let kind = isCard ? "CARD_PAYMENT" : "TRANSFER";
     if (/^mbway/i.test(d.title)) {
+      kind = "MBWAY";
       description = `MB WAY · ${(out ? para : de)?.replace(/,\s*$/, "") ?? ""}`.trim();
     } else if (/^transferência/i.test(d.title)) {
       const who = (out ? para : de) ?? d.title;

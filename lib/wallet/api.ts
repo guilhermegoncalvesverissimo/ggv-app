@@ -1,4 +1,5 @@
-import type { Account, Budget, Transaction } from "./types";
+import type { Account, Budget, Transaction, WalletEvent } from "./types";
+import type { EventInput } from "./events";
 import type { Category } from "./categories";
 
 /** Typed wrappers around /api/wallet*. Same-origin, session-cookie auth.
@@ -41,18 +42,21 @@ export async function fetchWallet(): Promise<{
   transactions: Transaction[];
   categories: Category[];
   budgets: Budget[];
+  events: WalletEvent[];
 }> {
   const j = await api<{
     accounts: Account[];
     transactions: Transaction[];
     categories?: Category[];
     budgets?: Budget[];
+    events?: WalletEvent[];
   }>("/api/wallet");
   return {
     accounts: j.accounts,
     transactions: j.transactions,
     categories: j.categories ?? [],
     budgets: j.budgets ?? [],
+    events: j.events ?? [],
   };
 }
 
@@ -116,6 +120,7 @@ export async function createTransaction(input: {
   category: string;
   note?: string;
   date: string;
+  eventId?: string;
   createdAt?: number;
 }): Promise<Transaction> {
   const json = await api<{ transaction: Transaction }>(
@@ -137,6 +142,7 @@ export async function patchTransaction(
     category?: string;
     note?: string;
     date?: string;
+    eventId?: string | null;
   }
 ): Promise<void> {
   await api(`/api/wallet/transactions/${id}`, {
@@ -147,4 +153,27 @@ export async function patchTransaction(
 
 export async function deleteTransaction(id: string): Promise<void> {
   await api(`/api/wallet/transactions/${id}`, { method: "DELETE" });
+}
+
+export async function createWalletEvent(input: EventInput): Promise<WalletEvent> {
+  const j = await api<{ event: WalletEvent }>("/api/wallet/events", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return j.event;
+}
+
+export async function patchWalletEvent(id: string, patch: Partial<EventInput>): Promise<void> {
+  await api(`/api/wallet/events/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+}
+
+export async function deleteWalletEvent(id: string): Promise<void> {
+  await api(`/api/wallet/events/${id}`, { method: "DELETE" });
+}
+
+export async function assignToEvent(
+  id: string,
+  change: { add?: string[]; remove?: string[] }
+): Promise<void> {
+  await api(`/api/wallet/events/${id}/assign`, { method: "POST", body: JSON.stringify(change) });
 }

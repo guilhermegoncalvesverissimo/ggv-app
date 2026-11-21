@@ -6,7 +6,7 @@ import { Sheet } from "@/components/ui/Sheet";
 import { categoriesFor, categoryById } from "@/lib/wallet/categories";
 import { formatCents } from "@/lib/wallet/format";
 import { parseStatement, selectedByDefault, type StatementRow } from "@/lib/wallet/statement";
-import type { Account, Transaction } from "@/lib/wallet/types";
+import type { Account, Transaction, WalletEvent } from "@/lib/wallet/types";
 import { cn } from "@/lib/utils";
 
 /** Statement rows can be in other currencies (USD on a trip, …). */
@@ -31,12 +31,14 @@ export function ImportStatementSheet({
   onClose,
   accounts,
   transactions,
+  events = [],
   onAdd,
 }: {
   open: boolean;
   onClose: () => void;
   accounts: Account[];
   transactions: Transaction[];
+  events?: WalletEvent[];
   onAdd: (tx: Omit<Transaction, "id" | "createdAt">) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +48,7 @@ export function ImportStatementSheet({
   const defaultAccount =
     accounts.find((a) => /revolut/i.test(a.name))?.id ?? accounts[0]?.id ?? "";
   const [accountId, setAccountId] = useState(defaultAccount);
+  const [eventId, setEventId] = useState<string | null>(null);
   const account = accountId || defaultAccount;
 
   const reset = () => {
@@ -96,6 +99,7 @@ export function ImportStatementSheet({
         category: r.category,
         note: r.description,
         date: r.date,
+        eventId: eventId ?? undefined,
       });
     }
     setDone(selected.length);
@@ -174,6 +178,29 @@ export function ImportStatementSheet({
                     >
                       {a.emoji ? `${a.emoji} ` : ""}
                       {a.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {events.length > 0 && (
+              <div>
+                <p className="px-1 pb-2 text-xs font-medium uppercase tracking-wide text-muted">
+                  Juntar a um evento (opcional)
+                </p>
+                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                  {[{ id: null, name: "Nenhum" }, ...events].map((e) => (
+                    <button
+                      key={e.id ?? "none"}
+                      type="button"
+                      onClick={() => setEventId(e.id)}
+                      className={cn(
+                        "shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition",
+                        eventId === e.id ? "bg-elevated text-white" : "bg-canvas-soft/50 text-ink"
+                      )}
+                    >
+                      {e.name}
                     </button>
                   ))}
                 </div>

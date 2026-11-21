@@ -21,6 +21,7 @@ export async function POST(req: Request) {
     category?: string;
     note?: string;
     date?: string;
+    eventId?: string;
     createdAt?: number;
   };
   try {
@@ -53,6 +54,8 @@ export async function POST(req: Request) {
       category: body.category,
       note: body.note?.trim() || null,
       date: body.date,
+      // Only sent when set, so inserts keep working before 0012 is applied.
+      ...(body.eventId ? { event_id: body.eventId } : {}),
       ...(body.createdAt
         ? { created_at: new Date(body.createdAt).toISOString() }
         : {}),
@@ -70,6 +73,7 @@ export async function POST(req: Request) {
     category: data.category,
     note: data.note ?? undefined,
     date: data.date,
+    eventId: data.event_id ?? undefined,
     createdAt: new Date(data.created_at).getTime(),
   };
   return NextResponse.json({ transaction }, { status: 201 });

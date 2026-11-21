@@ -24,6 +24,7 @@ export async function PATCH(
     category?: string;
     note?: string;
     date?: string;
+    eventId?: string | null;
   };
   try {
     body = (await req.json()) as typeof body;
@@ -46,6 +47,7 @@ export async function PATCH(
     patch.category = body.category;
   if ("note" in body) patch.note = body.note?.trim() || null;
   if (typeof body.date === "string" && body.date) patch.date = body.date;
+  if ("eventId" in body) patch.event_id = body.eventId || null;
 
   if (Object.keys(patch).length === 0) {
     return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
