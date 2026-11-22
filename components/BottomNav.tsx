@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import {
   ChevronLeft,
   FolderKanban,
+  Languages,
   MessageCircle,
   Newspaper,
   Plane,
@@ -27,6 +28,7 @@ type Tab = {
 const LAZER_TABS: Tab[] = [
   { href: "/restaurantes", label: "Restaurantes", icon: UtensilsCrossed },
   { href: "/viagens", label: "Viagens", icon: Plane },
+  { href: "/dobragem", label: "Vídeos em português", icon: Languages },
 ];
 
 const MAIN_TABS: Tab[] = [
