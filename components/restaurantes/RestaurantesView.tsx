@@ -245,7 +245,7 @@ export function RestaurantesView() {
 
       {/* Restaurante escolhido */}
       {selected && (
-        <div className="card space-y-3 p-5">
+        <div id="restaurante-detalhe" className="card scroll-mt-24 space-y-3 p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-lg font-semibold text-ink">{selected.n}</h2>

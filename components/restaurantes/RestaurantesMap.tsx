@@ -12,6 +12,29 @@ const PIN = L.divIcon({
   html: `<svg width="30" height="40" viewBox="0 0 30 40" xmlns="http://www.w3.org/2000/svg"><path d="M15 0C6.7 0 0 6.6 0 14.8 0 25.9 15 40 15 40s15-14.1 15-25.2C30 6.6 23.3 0 15 0z" fill="#ea4335" stroke="#a50e0e" stroke-width="1"/><circle cx="15" cy="14.5" r="5.5" fill="#a50e0e"/></svg>`,
 });
 
+/** Balão que abre ao tocar num ponto: nome, categoria e atalho para a
+ *  opinião (o cartão com os detalhes fica por baixo do mapa, fora do ecrã
+ *  no telemóvel). Construído com DOM para não interpretar HTML dos dados. */
+function popupFor(r: Restaurante): HTMLElement {
+  const box = document.createElement("div");
+  box.style.cssText = "min-width:160px;max-width:220px;font-family:inherit";
+  const name = document.createElement("div");
+  name.textContent = r.n;
+  name.style.cssText = "font-weight:600;font-size:14px;line-height:1.25;color:#0e0e10";
+  const cat = document.createElement("div");
+  cat.style.cssText = "display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:#6b7280";
+  const dot = document.createElement("span");
+  dot.style.cssText = `width:8px;height:8px;border-radius:9999px;flex-shrink:0;background:${corDe(r.c)}`;
+  cat.append(dot, document.createTextNode(r.c));
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "Ver opinião ↓";
+  btn.style.cssText = "margin-top:8px;padding:6px 12px;border-radius:9999px;background:#0e0e10;color:#fff;font-size:12px;font-weight:500";
+  btn.onclick = () => document.getElementById("restaurante-detalhe")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  box.append(name, cat, btn);
+  return box;
+}
+
 // Mapa (Leaflet + OpenStreetMap). Com 3000+ pontos, os marcadores são
 // círculos desenhados em canvas — muito mais leves do que ícones.
 export default function RestaurantesMap({
@@ -35,7 +58,8 @@ export default function RestaurantesMap({
 
   useEffect(() => {
     if (!el.current || map.current) return;
-    const m = L.map(el.current, { preferCanvas: true, zoomControl: false }).setView([39.6, -8.4], 7);
+    // Tolerância maior: os pontos têm 6 px, pequenos para um dedo.
+    const m = L.map(el.current, { preferCanvas: true, renderer: L.canvas({ tolerance: 10 }), zoomControl: false }).setView([39.6, -8.4], 7);
     L.control.zoom({ position: "topright" }).addTo(m);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap",
@@ -56,7 +80,7 @@ export default function RestaurantesMap({
       const mk = L.circleMarker([r.lat, r.lng], {
         radius: 6, weight: 1.5, color: "#ffffff", fillColor: corDe(r.c), fillOpacity: 0.95,
       });
-      mk.bindTooltip(r.n, { direction: "top", offset: [0, -6] });
+      mk.bindPopup(() => popupFor(r), { offset: [0, -4], closeButton: false, autoPanPadding: [24, 24] });
       mk.on("click", () => onSelectRef.current(r.id));
       mk.addTo(g);
       markers.current.set(r.id, mk);
@@ -71,6 +95,8 @@ export default function RestaurantesMap({
     if (mk) {
       mk.bringToFront();
       map.current.flyTo(mk.getLatLng(), Math.max(map.current.getZoom(), 14), { duration: 0.6 });
+      // Também quando vem da lista: o balão diz qual é o ponto.
+      map.current.once("moveend", () => mk.openPopup());
     }
   }, [selectedId, items]);
 
