@@ -95,3 +95,8 @@ export async function POST(req: Request) {
     201
   );
 }
+
+/** Opening the URL in a browser: a quick "is it reachable?" check. */
+export async function GET() {
+  return text("OK — o endereço do atalho Apple Pay está a funcionar. O atalho tem de usar o método POST.");
+}
