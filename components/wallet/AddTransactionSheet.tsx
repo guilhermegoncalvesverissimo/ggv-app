@@ -327,32 +327,31 @@ export function AddTransactionSheet({
           </div>
         )}
 
-        {/* Date + note */}
-        <div className="grid grid-cols-2 gap-2">
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted">
-              Data
-            </span>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
-            />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted">
-              Nota
-            </span>
-            <input
-              type="text"
-              value={note}
-              onChange={(e) => setNote(e.target.value.slice(0, 80))}
-              placeholder="Opcional"
-              className="mt-1 w-full rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
-            />
-          </label>
-        </div>
+        {/* Date + note. The note gets the full width: imported ones are long
+            ("MB WAY · Luis Pedro Lopes Pereira · gasóleo") and were cut off. */}
+        <label className="block">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">
+            Data
+          </span>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="mt-1 block h-11 w-full min-w-0 appearance-none rounded-2xl bg-canvas-soft/40 px-3 text-left text-sm text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
+          />
+        </label>
+        <label className="block">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted">
+            Nota
+          </span>
+          <textarea
+            value={note}
+            rows={note.length > 40 ? 2 : 1}
+            onChange={(e) => setNote(e.target.value.replace(/\n/g, " ").slice(0, 140))}
+            placeholder="Opcional"
+            className="mt-1 block w-full resize-none rounded-2xl bg-canvas-soft/40 px-3 py-2.5 text-sm leading-snug text-ink outline-none ring-2 ring-transparent transition focus:bg-card-bg focus:ring-accent"
+          />
+        </label>
 
         {events.length > 0 && (
           <div>

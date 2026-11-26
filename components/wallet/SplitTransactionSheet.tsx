@@ -73,7 +73,8 @@ export function SplitTransactionSheet({
   const noteFor = (p: Part) => {
     const extra = p.note.trim();
     if (!extra) return tx.note;
-    return tx.note ? `${tx.note} · ${extra}` : extra;
+    // Detail first: notes get cut off at the end in lists.
+    return tx.note ? `${extra} · ${tx.note}` : extra;
   };
 
   const save = () => {
