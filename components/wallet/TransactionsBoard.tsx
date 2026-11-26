@@ -19,7 +19,8 @@ import { AccountPickerPill } from "./AccountPickerPill";
 import { SwipeableTxRow } from "./SwipeableTxRow";
 import type { Account, Transaction } from "@/lib/wallet/types";
 
-const TX_LIMIT = 20;
+/** Rows shown at first; "Mostrar mais" reveals the rest in steps. */
+const TX_PAGE = 50;
 
 type AccountFilter = string | "all";
 
@@ -46,6 +47,7 @@ export function TransactionsBoard() {
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>(() => currentMonth());
+  const [visible, setVisible] = useState(TX_PAGE);
   const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
 
   const accountById = useMemo(() => {
@@ -159,7 +161,7 @@ export function TransactionsBoard() {
           </p>
         ) : (
           <ul>
-            {ordered.slice(0, TX_LIMIT).map((tx) => (
+            {ordered.slice(0, visible).map((tx) => (
               <SwipeableTxRow
                 key={tx.id}
                 tx={tx}
@@ -178,6 +180,15 @@ export function TransactionsBoard() {
               />
             ))}
           </ul>
+        )}
+        {ordered.length > visible && (
+          <button
+            type="button"
+            onClick={() => setVisible((v) => v + TX_PAGE)}
+            className="w-full border-t border-card-border px-5 py-3.5 text-sm font-medium text-ink"
+          >
+            Mostrar mais ({ordered.length - visible} restantes)
+          </button>
         )}
       </section>
 
