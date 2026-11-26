@@ -7,6 +7,7 @@ import { type Category, categoriesFor } from "@/lib/wallet/categories";
 import { parseAmountToCents, todayIso } from "@/lib/wallet/format";
 import type { Account, Transaction, TxType, WalletEvent } from "@/lib/wallet/types";
 import { singleEmoji } from "@/lib/emoji";
+import { SplitTransactionSheet } from "./SplitTransactionSheet";
 
 type TxPayload = {
   accountId: string;
@@ -62,6 +63,7 @@ export function AddTransactionSheet({
   const [date, setDate] = useState(todayIso());
   const [accountId, setAccountId] = useState<string>(defaultAccountId);
   const [eventId, setEventId] = useState<string | null>(defaultEventId ?? null);
+  const [splitting, setSplitting] = useState<Transaction | null>(null);
   const [newCatOpen, setNewCatOpen] = useState(false);
   const [newCatEmoji, setNewCatEmoji] = useState("");
   const [newCatLabel, setNewCatLabel] = useState("");
@@ -146,12 +148,26 @@ export function AddTransactionSheet({
   };
 
   return (
+    <>
     <Sheet open={open} onClose={onClose}>
       {editing && (
-        <div className="flex items-center justify-between px-1 pb-3">
-          <h2 className="text-base font-semibold tracking-tight">
+        <div className="flex items-center justify-between gap-4 px-1 pb-3">
+          <h2 className="mr-auto text-base font-semibold tracking-tight">
             Editar transação
           </h2>
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                // The split sheet lives here, so it outlives this one closing.
+                setSplitting(editing);
+                onClose();
+              }}
+              className="text-sm font-medium text-ink"
+            >
+              Dividir
+            </button>
+          )}
           {onDelete && (
             <button
               type="button"
@@ -382,5 +398,15 @@ export function AddTransactionSheet({
         </div>
       </form>
     </Sheet>
+    {onEdit && (
+      <SplitTransactionSheet
+        open={!!splitting}
+        onClose={() => setSplitting(null)}
+        tx={splitting}
+        onEdit={onEdit}
+        onAdd={onAdd}
+      />
+    )}
+    </>
   );
 }
