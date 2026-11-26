@@ -40,7 +40,7 @@ export function CategoriesOverview({
   onEditTransaction?: (tx: Transaction) => void;
 }) {
   const [mode, setMode] = useState<TxType>("expense");
-  const [unit, setUnit] = useState<"pct" | "eur">("pct");
+  const [unit, setUnit] = useState<"pct" | "eur">("eur");
   const [showAll, setShowAll] = useState(false);
   const [openCat, setOpenCat] = useState<Slice | null>(null);
 
